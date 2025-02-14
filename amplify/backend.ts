@@ -2,11 +2,10 @@ import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
-import { makeslideFunctionHandler } from './function/makeslide/resource';
-
+import { makeslide_pipe } from './function/makeslide_pipe/resource';
 defineBackend({
   auth,
   data,
   storage,
-  makeslideFunctionHandler
+  makeslide_pipe
 });

@@ -11,9 +11,23 @@
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.9.1",
-    "aws-amplify": "^6.6.6",
+    "@aws-amplify/ui-react-storage": "^3.7.2",
+    "@aws-sdk/client-s3": "^3.744.0",
+    "@aws-sdk/s3-request-presigner": "^3.744.0",
+    "@chakra-ui/modal": "^2.3.1",
+    "@chakra-ui/react": "^2.10.5",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "aws-amplify": "^6.12.3",
+    "aws-sdk": "^2.1692.0",
+    "framer-motion": "^10.18.0",
+    "gapi-script": "^1.2.0",
+    "googleapis": "^144.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-d3-tree": "^3.6.5",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.1.5",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.14.0",
