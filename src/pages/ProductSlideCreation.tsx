@@ -5,21 +5,16 @@ import outputs from "../../amplify_outputs.json";
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 const awsRegion = outputs.auth.aws_region;
-const functionName = outputs.custom.lambda_gen2FunctionName;
+const functionName = outputs.custom.makeslide_pipeFunctionName;
 
-
-const lambdaClient = new LambdaClient({
-  region: 'ap-northeast-1', // 適宜
-  // 資格情報(Credentials)はAmplifyが自動的に注入するか、必要に応じて設定
-});
 
 const ProductSlideCreation: React.FC = () => {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
 
   const products = [
-    { productId: 'prod1', name: '製品A' },
-    { productId: 'prod2', name: '製品B' },
-    { productId: 'prod3', name: '製品C' },
+    { productId: 'pr1', name: '製品AAA' },
+    { productId: 'pr2', name: '製品BBB' },
+    { productId: 'pr3', name: '製品CCC' },
   ];
 
   const handleCheckboxChange = (id: string, checked: boolean) => {
@@ -29,7 +24,7 @@ const ProductSlideCreation: React.FC = () => {
   };
 
 
-  const trigger_lambda = async (productIds:[string]) => {
+  const trigger_lambda = async (productIds:string[]) => {
     const { credentials } = await fetchAuthSession();
     const body = {
       productIds:productIds
@@ -47,7 +42,8 @@ const ProductSlideCreation: React.FC = () => {
     const response = await lambda.send(command);
     if (response.Payload) {
       const payload = JSON.parse(new TextDecoder().decode(response.Payload));
-      return JSON.parse(payload);
+      console.log("payload",payload)
+      return response.Payload//JSON.parse(payload);
     } else {
       return undefined;
     }
@@ -56,22 +52,23 @@ const ProductSlideCreation: React.FC = () => {
   const createSlides = async () => {
     try {
       // Lambda呼び出し用のペイロード作成
-      const payload = {
-        productIds: selectedProductIds,
-      };
+      // const payload = {
+      //   productIds: selectedProductIds,
+      // };
 
-      // LambdaをInvoke
-      const command = new InvokeCommand({
-        FunctionName: 'your-lambda-function-name', // デプロイしたLambdaの名称/ARN
-        InvocationType: 'RequestResponse',
-        Payload: new TextEncoder().encode(JSON.stringify(payload)),
-      });
+      // // LambdaをInvoke
+      // const command = new InvokeCommand({
+      //   FunctionName: 'your-lambda-function-name', // デプロイしたLambdaの名称/ARN
+      //   InvocationType: 'RequestResponse',
+      //   Payload: new TextEncoder().encode(JSON.stringify(payload)),
+      // });
 
-      const response = await lambdaClient.send(command);
-
-      if (response.Payload) {
+      const payload = await trigger_lambda(selectedProductIds)//lambdaClient.send(command);
+      console.log("payload",payload)
+      
+      if (payload) {
         const dec = new TextDecoder('utf-8');
-        const jsonStr = dec.decode(response.Payload);
+        const jsonStr = dec.decode(payload);
         const data = JSON.parse(jsonStr);
         
         if (data.slideUrl) {
