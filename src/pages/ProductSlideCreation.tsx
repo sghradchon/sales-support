@@ -43,7 +43,7 @@ const ProductSlideCreation: React.FC = () => {
     if (response.Payload) {
       const payload = JSON.parse(new TextDecoder().decode(response.Payload));
       console.log("payload",payload)
-      return response.Payload//JSON.parse(payload);
+      return payload//JSON.parse(payload);
     } else {
       return undefined;
     }
@@ -51,34 +51,18 @@ const ProductSlideCreation: React.FC = () => {
 
   const createSlides = async () => {
     try {
-      // Lambda呼び出し用のペイロード作成
-      // const payload = {
-      //   productIds: selectedProductIds,
-      // };
-
-      // // LambdaをInvoke
-      // const command = new InvokeCommand({
-      //   FunctionName: 'your-lambda-function-name', // デプロイしたLambdaの名称/ARN
-      //   InvocationType: 'RequestResponse',
-      //   Payload: new TextEncoder().encode(JSON.stringify(payload)),
-      // });
 
       const payload = await trigger_lambda(selectedProductIds)//lambdaClient.send(command);
       console.log("payload",payload)
       
       if (payload) {
-        const dec = new TextDecoder('utf-8');
-        const jsonStr = dec.decode(payload);
-        const data = JSON.parse(jsonStr);
-        
-        if (data.slideUrl) {
-          // スライドURLを新規タブで開く
-          window.open(data.slideUrl, '_blank');
-        } else if (data.error) {
-          alert(`エラー: ${data.error}`);
+        const message = payload.message;
+        if (message == "success"){
+          const slideUrl = payload.slideUrl;
+          window.open(slideUrl, '_blank');
         } else {
           alert('スライドURLが返されませんでした。');
-        }
+        }        
       } else {
         alert('LambdaからのPayloadが空でした。');
       }
