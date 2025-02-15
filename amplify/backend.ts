@@ -11,7 +11,10 @@ const backend = defineBackend({
 });
 
 const authenticatedUserIamRole = backend.auth.resources.authenticatedUserIamRole;
+const unauthenticatedUserIamRole = backend.auth.resources.unauthenticatedUserIamRole;
+
 backend.makeslide_pipe.resources.lambda.grantInvoke(authenticatedUserIamRole);
+backend.makeslide_pipe.resources.lambda.grantInvoke(unauthenticatedUserIamRole);
 
 backend.addOutput({
    custom: {
