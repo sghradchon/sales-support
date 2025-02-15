@@ -57,8 +57,10 @@ const ProductSlideCreation: React.FC = () => {
       
       if (payload) {
         const message = payload.message;
+        console.log("message:",message)
         if (message == "success"){
           const slideUrl = payload.slideUrl;
+          console.log("slideUrl:",slideUrl)
           window.open(slideUrl, '_blank');
         } else {
           alert('スライドURLが返されませんでした。');
