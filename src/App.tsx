@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { Box, Button, Flex } from '@chakra-ui/react';
-import MakeProductSlidePage from './pages/MakeProductSlidePage';
 import SalesHeatMapPage from './pages/SalesHeatMapPage';
 import ProductSlideCreation from './pages/ProductSlideCreation';
 

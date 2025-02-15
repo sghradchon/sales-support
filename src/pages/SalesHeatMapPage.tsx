@@ -591,6 +591,7 @@ const SalesHeatMapPage: React.FC = () => {
               max={5}
               value={c.contactLevel}
               onChange={(strVal, numVal) => {
+                console.log("contactLevel strVal",strVal)
                 if (numVal >= 0 && numVal <= 5) {
                   updateContact({ ...c, contactLevel: numVal });
                 }
