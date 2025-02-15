@@ -40,10 +40,22 @@ const ProductSlideCreation: React.FC = () => {
     });
 
     const response = await lambda.send(command);
+
     if (response.Payload) {
-      const payload = JSON.parse(new TextDecoder().decode(response.Payload));
-      console.log("payload",payload)
-      return payload//JSON.parse(payload);
+      const rawPayload = new TextDecoder().decode(response.Payload);
+      console.log("rawPayload:", rawPayload);
+
+      const parsedPayload = JSON.parse(rawPayload); // 1回目の JSON.parse() でオブジェクトにする
+      console.log("parsedPayload:", parsedPayload);
+
+      if (parsedPayload.body) {
+        const finalPayload = JSON.parse(parsedPayload.body); // 2回目の JSON.parse() で body の JSON をオブジェクトにする
+        console.log("finalPayload:", finalPayload);
+
+        return finalPayload;
+      } else {
+        return undefined;
+      }
     } else {
       return undefined;
     }
