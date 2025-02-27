@@ -3,102 +3,119 @@
         "organizationId": "ORG-001",
         "organizationName": "Violet Inc.",
         "upperLevelOrgId": "",
-        "memo": "本社"
+        "memo": "本社",
+        "siblingLevelOrgOrder": 10
     },
     {
         "organizationId": "ORG-002",
         "organizationName": "営業部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "国内営業と海外営業"
+        "memo": "国内営業と海外営業",
+        "siblingLevelOrgOrder": 20
     },
     {
         "organizationId": "ORG-003",
         "organizationName": "第1営業部",
         "upperLevelOrgId": "ORG-002",
-        "memo": "大手企業担当"
+        "memo": "大手企業担当",
+        "siblingLevelOrgOrder": 30
     },
     {
         "organizationId": "ORG-004",
         "organizationName": "第2営業部",
         "upperLevelOrgId": "ORG-002",
-        "memo": "中小企業担当"
+        "memo": "中小企業担当",
+        "siblingLevelOrgOrder": 40
     },
     {
         "organizationId": "ORG-005",
         "organizationName": "第3営業部",
         "upperLevelOrgId": "ORG-002",
-        "memo": "スタートアップ担当"
+        "memo": "スタートアップ担当",
+        "siblingLevelOrgOrder": 50
     },
     {
         "organizationId": "ORG-006",
         "organizationName": "海外営業部",
         "upperLevelOrgId": "ORG-002",
-        "memo": "海外取引"
+        "memo": "海外取引",
+        "siblingLevelOrgOrder": 60
     },
     {
         "organizationId": "ORG-007",
         "organizationName": "技術部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "研究開発"
+        "memo": "研究開発",
+        "siblingLevelOrgOrder": 70
     },
     {
         "organizationId": "ORG-008",
         "organizationName": "第1開発チーム",
         "upperLevelOrgId": "ORG-007",
-        "memo": "ハードウェア開発"
+        "memo": "ハードウェア開発",
+        "siblingLevelOrgOrder": 80
     },
     {
         "organizationId": "ORG-009",
         "organizationName": "第2開発チーム",
         "upperLevelOrgId": "ORG-007",
-        "memo": "ソフトウェア開発"
+        "memo": "ソフトウェア開発",
+        "siblingLevelOrgOrder": 90
     },
     {
         "organizationId": "ORG-010",
         "organizationName": "第3開発チーム",
         "upperLevelOrgId": "ORG-007",
-        "memo": "AI・データ解析"
+        "memo": "AI・データ解析",
+        "siblingLevelOrgOrder": 100
     },
     {
         "organizationId": "ORG-011",
         "organizationName": "第4開発チーム",
         "upperLevelOrgId": "ORG-007",
-        "memo": "IoT・センサ技術"
+        "memo": "IoT・センサ技術",
+        "siblingLevelOrgOrder": 110
     },
     {
         "organizationId": "ORG-012",
         "organizationName": "品質管理部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "品質管理"
+        "memo": "品質管理",
+        "siblingLevelOrgOrder": 120
     },
     {
         "organizationId": "ORG-013",
         "organizationName": "マーケティング部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "市場調査と広告"
+        "memo": "市場調査と広告",
+        "siblingLevelOrgOrder": 130
     },
     {
         "organizationId": "ORG-014",
         "organizationName": "経営企画部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "企業戦略の立案"
+        "memo": "企業戦略の立案",
+        "siblingLevelOrgOrder": 140
     },
     {
         "organizationId": "ORG-015",
         "organizationName": "人事部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "採用・研修"
+        "memo": "採用・研修",
+        "siblingLevelOrgOrder": 150
     },
     {
         "organizationId": "ORG-016",
         "organizationName": "財務部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "資金管理"
+        "memo": "資金管理",
+        "siblingLevelOrgOrder": 160
     },
     {
         "organizationId": "ORG-017",
         "organizationName": "情報システム部",
         "upperLevelOrgId": "ORG-001",
-        "memo": "社内システム管理"
+        "memo": "社内システム管理",
+        "siblingLevelOrgOrder": 170
     }
 ]

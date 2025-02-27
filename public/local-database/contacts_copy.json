@@ -6,8 +6,7 @@
         "organizationId": "ORG-003",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 10
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-002",
@@ -16,8 +15,7 @@
         "organizationId": "ORG-003",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 20
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-003",
@@ -26,8 +24,7 @@
         "organizationId": "ORG-003",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 30
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-004",
@@ -36,8 +33,7 @@
         "organizationId": "ORG-004",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 40
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-005",
@@ -46,8 +42,7 @@
         "organizationId": "ORG-004",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 50
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-006",
@@ -56,8 +51,7 @@
         "organizationId": "ORG-004",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 60
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-007",
@@ -66,8 +60,7 @@
         "organizationId": "ORG-005",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 70
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-008",
@@ -76,8 +69,7 @@
         "organizationId": "ORG-005",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 80
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-009",
@@ -86,8 +78,7 @@
         "organizationId": "ORG-005",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 90
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-010",
@@ -96,8 +87,7 @@
         "organizationId": "ORG-006",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 100
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-011",
@@ -106,8 +96,7 @@
         "organizationId": "ORG-006",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 110
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-012",
@@ -116,8 +105,7 @@
         "organizationId": "ORG-006",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 120
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-013",
@@ -126,8 +114,7 @@
         "organizationId": "ORG-008",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 130
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-014",
@@ -136,8 +123,7 @@
         "organizationId": "ORG-008",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 140
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-015",
@@ -146,8 +132,7 @@
         "organizationId": "ORG-008",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 150
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-016",
@@ -156,8 +141,7 @@
         "organizationId": "ORG-009",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 160
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-017",
@@ -166,8 +150,7 @@
         "organizationId": "ORG-009",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 170
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-018",
@@ -176,8 +159,7 @@
         "organizationId": "ORG-009",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 180
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-019",
@@ -186,8 +168,7 @@
         "organizationId": "ORG-010",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 190
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-020",
@@ -196,8 +177,7 @@
         "organizationId": "ORG-010",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 200
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-021",
@@ -206,8 +186,7 @@
         "organizationId": "ORG-010",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 210
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-022",
@@ -216,8 +195,7 @@
         "organizationId": "ORG-011",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 220
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-023",
@@ -226,8 +204,7 @@
         "organizationId": "ORG-011",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 230
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-024",
@@ -236,8 +213,7 @@
         "organizationId": "ORG-011",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 240
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-025",
@@ -246,8 +222,7 @@
         "organizationId": "ORG-012",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 250
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-026",
@@ -256,8 +231,7 @@
         "organizationId": "ORG-012",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 260
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-027",
@@ -266,8 +240,7 @@
         "organizationId": "ORG-012",
         "title": "担当者",
         "contactLevel": 0,
-        "contactDescription": "現場担当者",
-        "siblingOrder": 270
+        "contactDescription": "現場担当者"
     },
     {
         "contactId": "C-028",
@@ -276,8 +249,7 @@
         "organizationId": "ORG-002",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 280
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-029",
@@ -286,8 +258,7 @@
         "organizationId": "ORG-002",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 290
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-030",
@@ -296,8 +267,7 @@
         "organizationId": "ORG-007",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 300
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-031",
@@ -306,8 +276,7 @@
         "organizationId": "ORG-007",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 310
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-032",
@@ -316,8 +285,7 @@
         "organizationId": "ORG-013",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 320
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-033",
@@ -326,8 +294,7 @@
         "organizationId": "ORG-013",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 330
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-034",
@@ -336,8 +303,7 @@
         "organizationId": "ORG-014",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 340
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-035",
@@ -346,8 +312,7 @@
         "organizationId": "ORG-014",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 350
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-036",
@@ -356,8 +321,7 @@
         "organizationId": "ORG-015",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 360
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-037",
@@ -366,8 +330,7 @@
         "organizationId": "ORG-015",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 370
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-038",
@@ -376,8 +339,7 @@
         "organizationId": "ORG-016",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 380
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-039",
@@ -386,8 +348,7 @@
         "organizationId": "ORG-016",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 390
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-040",
@@ -396,8 +357,7 @@
         "organizationId": "ORG-017",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 400
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-041",
@@ -406,8 +366,7 @@
         "organizationId": "ORG-017",
         "title": "マネージャー",
         "contactLevel": 0,
-        "contactDescription": "管理職",
-        "siblingOrder": 410
+        "contactDescription": "管理職"
     },
     {
         "contactId": "C-042",
@@ -416,7 +375,6 @@
         "organizationId": "ORG-001",
         "title": "CEO",
         "contactLevel": 0,
-        "contactDescription": "経営トップ",
-        "siblingOrder": 420
+        "contactDescription": "経営トップ"
     }
 ]

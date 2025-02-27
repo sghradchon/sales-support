@@ -199,6 +199,8 @@ const SalesHeatMapPage: React.FC = () => {
     if (!newOrgName.trim()) return;
   
     // 1) まず root候補を探す
+    //   buildOrgTree(orgData, contactData) で使っているロジックに準じる
+    //   例: "一番最初に upperLevelOrgId='' のorg をrootとする"
     const sorted = [...orgData].sort((a,b)=> a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
     const rootOrg = sorted.find(o => !o.upperLevelOrgId);
   
@@ -392,143 +394,205 @@ const SalesHeatMapPage: React.FC = () => {
     }
   };
 
-  function isDescendant(root: PositionedNode, potentialAncestorId: string, checkId: string): boolean {
-    // 1) potentialAncestorId のノードを探す
-    const ancestorNode = findPositionedNode(root, potentialAncestorId);
-    if (!ancestorNode) return false; // そもそも見つからないなら false
-  
-    // 2) ancestorNode のサブツリー内に checkId がいるか
-    return hasNode(ancestorNode, checkId);
-  }
-  
-  // 再帰的にサブツリー内に orgId が含まれるかをチェック
-  function hasNode(node: PositionedNode, targetOrgId: string): boolean {
-    if (node.org.organizationId === targetOrgId) return true;
-    // 子を再帰
-    for (const c of node.children) {
-      if (hasNode(c, targetOrgId)) return true;
-    }
-    return false;
-  }
-  
   //
   // 4) ドロップ処理
   //
-  const dropEntity = (screenX: number, screenY: number) => {
+  function dropEntity(screenX: number, screenY: number) {
     if (!draggingState || !positionedRoot) return;
     const { entityType, entityId } = draggingState;
     const { diagramX, diagramY } = screenToDiagramCoord(screenX, screenY);
-
+  
     const overOrgId = findOrgNodeAt(positionedRoot, diagramX, diagramY);
     if (!overOrgId) return;
-
+  
     if (entityType === 'contact') {
-      // Contact => Org (シンプル)
+      // Contact → Org
+      // ↓ここは今のままでも問題なければ使える
+      //   もしくは "contactで並び順"したい場合は同じように書き換える
       const c = contactData.find((x) => x.contactId === entityId);
       if (!c) return;
       const updated: Contact = { ...c, organizationId: overOrgId };
       updateContact(updated);
-
+  
     } else {
-      // Org => Org
-      const org = orgData.find((o) => o.organizationId === entityId);
-      if (!org) return;
-      if (org.organizationId === overOrgId) return;
-
-      const dropTarget = orgData.find((o) => o.organizationId === overOrgId);
-      if (!dropTarget) {
-        // root化 (親= '')
-        const updatedOrg: Organization = {
-          ...org,
-          upperLevelOrgId: '',
-          siblingLevelOrgOrder: 9999,
-          memo: org.memo,
-          manualX: undefined,
-          manualY: undefined,
-        };
-        updateOrganization(updatedOrg);
-        return;
-      }
-
-      // dragOverMode -> parent/before/after
-      if (!dragOverMode) return; // null safety
-      if (isDescendant(positionedRoot, org.organizationId, overOrgId)) {
-        toast({
-          title: 'Invalid drop',
-          description: 'Cannot place an ancestor under its own descendant!',
-          status: 'error',
-          duration: 3000,
-        });
-        return;
-      }
-      dropEntityForOrg(org, dropTarget, dragOverMode);
+      // Org → Org
+      // ★↓↓ここを「提案のリファクタ後ロジック」に置き換える↓↓
+      dropEntityForOrg(entityId, overOrgId, dragOverMode);
     }
-  };
-
-  /** ★★★ ここが「親変更 + 並び順指定」を同時に実行する関数 ★★★ */
-  function dropEntityForOrg(org: Organization, dropTarget: Organization, mode: 'parent'|'before'|'after') {
-    // oldParent
-    const oldParentId = org.upperLevelOrgId || '';
-    // newParent
+  }
+  function dropEntityForOrg(draggingOrgId: string, dropTargetId: string, dropMode: 'parent'|'before'|'after') {
+    const org = orgData.find(o => o.organizationId === draggingOrgId);
+    if(!org) return;
+  
+    const dropTarget = orgData.find(o => o.organizationId === dropTargetId);
+    if(!dropTarget) return;
+  
+    // 1) newParentId を決定
     let newParentId: string;
-    
-    if (mode==='parent') {
-      // dropTarget を新しい親にする
-      newParentId = dropTarget.organizationId;
+    if(dropMode === 'parent') {
+      // 親変更
+      newParentId = dropTarget.organizationId; 
     } else {
-      // 'before' or 'after' → dropTargetと同じ親を共有する
+      // 'before' | 'after' => 同じ親に属する
       newParentId = dropTarget.upperLevelOrgId || '';
     }
-    
+  
+    // 2) oldParentId
+    const oldParentId = org.upperLevelOrgId || '';
+  
+    // 3) siblings = newParentId の子をソート
+    const siblings = orgData.filter(o=> o.upperLevelOrgId === newParentId);
+    const sorted = [...siblings].sort((a,b)=>
+      a.siblingLevelOrgOrder - b.siblingLevelOrgOrder
+    );
+  
+    // 4) oldParent != newParent => "親変更"
     const sameParent = (oldParentId === newParentId);
-
-    // 1) newParentの子を取得
-    const siblings = orgData.filter(o => o.upperLevelOrgId===newParentId);
-    // 2) sort
-    const sorted = [...siblings].sort((a,b)=> a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
-    // 3) parent変わるなら org.upperLevelOrgId = newParentId
-    if (!sameParent) {
-      org = { ...org, upperLevelOrgId: newParentId };
-    } else {
-      // same parent → reorder
-      // remove org from sorted
-      const withoutOrg = sorted.filter(x=> x.organizationId!==org.organizationId);
-      sorted.length=0;
-      withoutOrg.forEach(x=> sorted.push(x));
+    if(!sameParent){
+      org.upperLevelOrgId = newParentId;
     }
-    
-    if (mode==='parent') {
-      // 末尾に挿入
-      const maxOrder = sorted.reduce((acc, s)=> Math.max(acc, s.siblingLevelOrgOrder),0);
-      org.siblingLevelOrgOrder = maxOrder+10;
-      
+  
+    // 5) sortedからorgを除外
+    const filtered = sorted.filter(x=> x.organizationId !== org.organizationId);
+  
+    // 6) dropModeによる並び順計算
+    if(dropMode==='parent'){
+      // 末尾挿入
+      const maxOrder = filtered.reduce(
+        (acc,o) => Math.max(acc, o.siblingLevelOrgOrder),
+        0
+      );
+      org.siblingLevelOrgOrder = maxOrder + 10;
+  
     } else {
-      // 'before' or 'after'
-      const targetIndex = sorted.findIndex(x=> x.organizationId===dropTarget.organizationId);
-      if(targetIndex<0){
-        // fallback => 末尾
-        sorted.push(org);
+      // 'before'/'after' => dropTargetの位置を探して前/後に挿入
+      const idx = filtered.findIndex(x=> x.organizationId===dropTargetId);
+      if(idx < 0){
+        // fallback =>末尾
+        filtered.push(org);
       } else {
-        if(mode==='before'){
-          sorted.splice(targetIndex,0,org);
+        if(dropMode==='before') {
+          filtered.splice(idx, 0, org);
         } else {
-          sorted.splice(targetIndex+1,0,org);
+          filtered.splice(idx+1, 0, org);
         }
       }
-      // 10刻み割り当て
+      
+      // 7) 10刻み再割り当て
       let base=10;
-      for(const s of sorted){
-        s.siblingLevelOrgOrder=base;
+      for(const s of filtered){
+        s.siblingLevelOrgOrder = base;
         base+=10;
       }
     }
-
-    // manualX, manualY 無効化
-    org = { ...org, manualX: undefined, manualY: undefined };
-
-    updateOrganization(org);
+  
+    // 8) update
+    const updatedOrg = { ...org };
+    updateOrganization(updatedOrg);
   }
+  // const dropEntity = (screenX: number, screenY: number) => {
+  //   if (!draggingState || !positionedRoot) return;
+  //   const { entityType, entityId } = draggingState;
+  //   const { diagramX, diagramY } = screenToDiagramCoord(screenX, screenY);
 
+  //   const overOrgId = findOrgNodeAt(positionedRoot, diagramX, diagramY);
+  //   if (!overOrgId) return;
+
+  //   if (entityType === 'contact') {
+  //     // Contact => Org
+  //     const c = contactData.find((x) => x.contactId === entityId);
+  //     if (!c) return;
+  //     const updated: Contact = { ...c, organizationId: overOrgId };
+  //     updateContact(updated);
+  //   } else {
+  //     // Org => Org
+  //     const org = orgData.find((o) => o.organizationId === entityId);
+  //     if (!org) return;
+  //     if (org.organizationId === overOrgId) return;
+
+  //     const dropTarget = orgData.find((o) => o.organizationId === overOrgId);
+  //     if (!dropTarget) {
+  //       // root化
+  //       const updatedOrg: Organization = {
+  //         ...org,
+  //         upperLevelOrgId: '',
+  //         siblingLevelOrgOrder: 9999,
+  //         memo: org.memo
+  //       };
+  //       updateOrganization(updatedOrg);
+  //       return;
+  //     }
+
+  //     // dragOverMode -> parent/before/after
+  //     if (dragOverMode === 'parent') {
+  //       // 親変更
+  //       const siblings = orgData.filter((s) => s.upperLevelOrgId === dropTarget.organizationId);
+  //       const maxOrder = siblings.reduce((acc, s) => {
+  //         return s.siblingLevelOrgOrder > acc ? s.siblingLevelOrgOrder : acc;
+  //       }, 0);
+  //       const updatedOrg: Organization = {
+  //         ...org,
+  //         upperLevelOrgId: dropTarget.organizationId,
+  //         siblingLevelOrgOrder: maxOrder + 10,
+  //         memo: org.memo,
+  //         // ★ 手動座標を削除 or undefined に
+  //         manualX: undefined,
+  //         manualY: undefined,
+  //       };
+  //       updateOrganization(updatedOrg);
+  //     } else if (dragOverMode === 'before') {
+  //       // 同じ親 => reorder
+  //       if (org.upperLevelOrgId === dropTarget.upperLevelOrgId) {
+  //         const newOrder = dropTarget.siblingLevelOrgOrder - 0.1;
+  //         const updatedOrg: Organization = {
+  //           ...org,
+  //           siblingLevelOrgOrder: newOrder,
+  //           memo: org.memo
+  //         };
+  //         updateOrganization(updatedOrg);
+  //       } else {
+  //         // 親が変わる + 先頭
+  //         const siblings = orgData.filter((s) => s.upperLevelOrgId === dropTarget.organizationId);
+  //         let minOrder = 9999;
+  //         siblings.forEach((s) => {
+  //           if (s.siblingLevelOrgOrder < minOrder) minOrder = s.siblingLevelOrgOrder;
+  //         });
+  //         if (minOrder === 9999) minOrder = 10;
+  //         const updatedOrg: Organization = {
+  //           ...org,
+  //           upperLevelOrgId: dropTarget.organizationId,
+  //           siblingLevelOrgOrder: minOrder - 0.1,
+  //           memo: org.memo
+  //         };
+  //         updateOrganization(updatedOrg);
+  //       }
+  //     } else if (dragOverMode === 'after') {
+  //       // 同じ親 => reorder
+  //       if (org.upperLevelOrgId === dropTarget.upperLevelOrgId) {
+  //         const newOrder = dropTarget.siblingLevelOrgOrder + 0.1;
+  //         const updatedOrg: Organization = {
+  //           ...org,
+  //           siblingLevelOrgOrder: newOrder,
+  //           memo: org.memo
+  //         };
+  //         updateOrganization(updatedOrg);
+  //       } else {
+  //         // 親が変わる + 末尾
+  //         const siblings = orgData.filter((s) => s.upperLevelOrgId === dropTarget.organizationId);
+  //         const maxOrder = siblings.reduce((acc, s) => {
+  //           return s.siblingLevelOrgOrder > acc ? s.siblingLevelOrgOrder : acc;
+  //         }, 0);
+  //         const updatedOrg: Organization = {
+  //           ...org,
+  //           upperLevelOrgId: dropTarget.organizationId,
+  //           siblingLevelOrgOrder: maxOrder + 10,
+  //           memo: org.memo
+  //         };
+  //         updateOrganization(updatedOrg);
+  //       }
+  //     }
+  //   }
+  // };
 
   //
   // 5) 座標変換
@@ -547,20 +611,34 @@ const SalesHeatMapPage: React.FC = () => {
   //
   // 6) ツリー構築 + レイアウト
   //
+  // function findOrgNodeAt(node: PositionedNode, x: number, y: number): string | null {
+  //   if (x >= node.x && x <= node.x + node.width && y >= node.y && y <= node.y + node.height) {
+  //     return node.org.organizationId;
+  //   }
+  //   for (const c of node.children) {
+  //     const found = findOrgNodeAt(c, x, y);
+  //     if (found) return found;
+  //   }
+  //   return null;
+  // }
+
   function findOrgNodeAt(
     node: PositionedNode,
     x: number, 
     y: number,
-    margin = 50
+    margin = 50 // ハイライト拡張マージン
   ): string | null {
+    // "拡張"された bounding box
     const left   = node.x ;
     const right  = node.x + node.width + margin;
     const top    = node.y - margin;
     const bottom = node.y + node.height + margin;
-
+  
+    // もしカーソルがこの「拡張bb」内にあるなら
     if (x >= left && x <= right && y >= top && y <= bottom) {
       return node.org.organizationId;
     }
+    // 子ノードの判定
     for (const child of node.children) {
       const found = findOrgNodeAt(child, x, y, margin);
       if (found) return found;
@@ -616,9 +694,18 @@ const SalesHeatMapPage: React.FC = () => {
 
     function computePos(node: OrgTreeNode, startX: number, startY: number): PositionedNode {
       const isLeaf = (node.children.length === 0);
-      const boxWidth = isLeaf
-        ? (node.contacts.length * 80 + 60)
-        : 150;
+
+      // box幅
+      const boxWidth = isLeaf ? (node.contacts.length * 80 + 60) : 150;
+
+      // 手動座標があるなら優先
+      // (この例では手動座標がある場合は「子のレイアウトは行うが、自分自身は指定座標を使う」形にしています)
+      let myX = startX;
+      let myY = startY;
+      if (node.org.manualX !== undefined && node.org.manualY !== undefined) {
+        myX = node.org.manualX;
+        myY = node.org.manualY;
+      }
 
       let myHeight = 0;
       if (isLeaf) {
@@ -630,25 +717,24 @@ const SalesHeatMapPage: React.FC = () => {
         myHeight = BOX_TOP_PADDING + contactArea;
       }
 
-      let childY = startY;
+      let childY = myY;
       const children: PositionedNode[] = [];
-
       node.children.forEach((child) => {
-        const pos = computePos(child, startX + horizontalGap, childY);
+        const pos = computePos(child, myX + horizontalGap, childY);
         children.push(pos);
         childY = pos.subtreeMaxY + verticalGap;
       });
 
-      let subtreeMinY = startY;
-      let subtreeMaxY = startY + myHeight;
+      let subtreeMinY = myY;
+      let subtreeMaxY = myY + myHeight;
       if (children.length > 0) {
         subtreeMaxY = Math.max(subtreeMaxY, children[children.length - 1].subtreeMaxY);
       }
 
       return {
         org: node.org,
-        x: startX,
-        y: startY,
+        x: myX,
+        y: myY,
         width: boxWidth,
         height: myHeight,
         contacts: node.contacts,
@@ -659,6 +745,9 @@ const SalesHeatMapPage: React.FC = () => {
       };
     }
 
+    // rootの計算
+    //   最初は startX=0, startY=0 など
+    //   ただし root が複数ある場合どうするかなど要設計
     return computePos(root, 0, 0);
   }
 
@@ -690,8 +779,6 @@ const SalesHeatMapPage: React.FC = () => {
       </React.Fragment>
     );
   }
-
-  
 
   //
   // 8) 組織ボックス
@@ -732,6 +819,7 @@ const SalesHeatMapPage: React.FC = () => {
           style={{ cursor: 'grab' }}
           onPointerDown={(e) => {
             e.stopPropagation();
+            // ドラッグ候補開始
             setDragCandidate({
               entityType: 'org',
               entityId: node.org.organizationId,
@@ -748,7 +836,7 @@ const SalesHeatMapPage: React.FC = () => {
         {/* ハイライト */}
         {dragOverOrgId === node.org.organizationId
           && draggingState?.entityType === 'org'
-          && draggingState.entityId !== node.org.organizationId
+          && draggingState.entityId !== node.org.organizationId // ★ 自身は除外
           && <InsertionIndicator node={node} mode={dragOverMode} />
         }
 
@@ -837,6 +925,7 @@ const SalesHeatMapPage: React.FC = () => {
   //
   // 10) ハイライト用コンポーネント
   //
+  // 例: モード別に "ローカル座標" を使う
   const InsertionIndicator: React.FC<{ node: PositionedNode; mode: DragOverMode }> = ({ node, mode }) => {
     const margin = 6;
     if (!mode) return null;
