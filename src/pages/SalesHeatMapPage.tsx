@@ -1074,91 +1074,91 @@ const SalesHeatMapPage: React.FC = () => {
 //
 // ツリー構築
 //
-function buildOrgTree(orgs: Organization[], contacts: Contact[]): OrgTreeNode {
-  const sorted = [...orgs].sort((a, b) => a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
-  const orgMap: Record<string, OrgTreeNode> = {};
-  sorted.forEach((o) => {
-    orgMap[o.organizationId] = { org: o, children: [], contacts: [] };
-  });
-  sorted.forEach((o) => {
-    if (o.upperLevelOrgId && orgMap[o.upperLevelOrgId]) {
-      orgMap[o.upperLevelOrgId].children.push(orgMap[o.organizationId]);
-    }
-  });
+// function buildOrgTree(orgs: Organization[], contacts: Contact[]): OrgTreeNode {
+//   const sorted = [...orgs].sort((a, b) => a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
+//   const orgMap: Record<string, OrgTreeNode> = {};
+//   sorted.forEach((o) => {
+//     orgMap[o.organizationId] = { org: o, children: [], contacts: [] };
+//   });
+//   sorted.forEach((o) => {
+//     if (o.upperLevelOrgId && orgMap[o.upperLevelOrgId]) {
+//       orgMap[o.upperLevelOrgId].children.push(orgMap[o.organizationId]);
+//     }
+//   });
 
-  let root: OrgTreeNode | undefined;
-  for (const o of sorted) {
-    if (!o.upperLevelOrgId || !orgMap[o.upperLevelOrgId]) {
-      root = orgMap[o.organizationId];
-      break;
-    }
-  }
+//   let root: OrgTreeNode | undefined;
+//   for (const o of sorted) {
+//     if (!o.upperLevelOrgId || !orgMap[o.upperLevelOrgId]) {
+//       root = orgMap[o.organizationId];
+//       break;
+//     }
+//   }
 
-  contacts.forEach((c) => {
-    if (orgMap[c.organizationId]) {
-      orgMap[c.organizationId].contacts.push(c);
-    }
-  });
-  if (!root) {
-    root = orgMap[sorted[0].organizationId];
-  }
-  return root;
-}
+//   contacts.forEach((c) => {
+//     if (orgMap[c.organizationId]) {
+//       orgMap[c.organizationId].contacts.push(c);
+//     }
+//   });
+//   if (!root) {
+//     root = orgMap[sorted[0].organizationId];
+//   }
+//   return root;
+// }
 
 //
 // レイアウト
 //
-function layoutOrgTree(root: OrgTreeNode): PositionedNode {
-  const horizontalGap = 180;
-  const verticalGap = 40;
+// function layoutOrgTree(root: OrgTreeNode): PositionedNode {
+//   const horizontalGap = 180;
+//   const verticalGap = 40;
 
-  function computePos(node: OrgTreeNode, startX: number, startY: number): PositionedNode {
-    const isLeaf = (node.children.length === 0);
-    const boxWidth = isLeaf
-      ? (node.contacts.length * 80 + 60)
-      : 150;
+//   function computePos(node: OrgTreeNode, startX: number, startY: number): PositionedNode {
+//     const isLeaf = (node.children.length === 0);
+//     const boxWidth = isLeaf
+//       ? (node.contacts.length * 80 + 60)
+//       : 150;
 
-    let myHeight = 0;
-    if (isLeaf) {
-      myHeight = BOX_TOP_PADDING + 20;
-    } else {
-      const cCount = node.contacts.length;
-      const contactArea = cCount * CONTACT_BOX_HEIGHT
-        + (cCount > 0 ? (cCount - 1) * CONTACT_BOX_GAP : 0);
-      myHeight = BOX_TOP_PADDING + contactArea;
-    }
+//     let myHeight = 0;
+//     if (isLeaf) {
+//       myHeight = BOX_TOP_PADDING + 20;
+//     } else {
+//       const cCount = node.contacts.length;
+//       const contactArea = cCount * CONTACT_BOX_HEIGHT
+//         + (cCount > 0 ? (cCount - 1) * CONTACT_BOX_GAP : 0);
+//       myHeight = BOX_TOP_PADDING + contactArea;
+//     }
 
-    let childY = startY;
-    const children: PositionedNode[] = [];
+//     let childY = startY;
+//     const children: PositionedNode[] = [];
 
-    node.children.forEach((child) => {
-      const pos = computePos(child, startX + horizontalGap, childY);
-      children.push(pos);
-      childY = pos.subtreeMaxY + verticalGap;
-    });
+//     node.children.forEach((child) => {
+//       const pos = computePos(child, startX + horizontalGap, childY);
+//       children.push(pos);
+//       childY = pos.subtreeMaxY + verticalGap;
+//     });
 
-    let subtreeMinY = startY;
-    let subtreeMaxY = startY + myHeight;
-    if (children.length > 0) {
-      subtreeMaxY = Math.max(subtreeMaxY, children[children.length - 1].subtreeMaxY);
-    }
+//     let subtreeMinY = startY;
+//     let subtreeMaxY = startY + myHeight;
+//     if (children.length > 0) {
+//       subtreeMaxY = Math.max(subtreeMaxY, children[children.length - 1].subtreeMaxY);
+//     }
 
-    return {
-      org: node.org,
-      x: startX,
-      y: startY,
-      width: boxWidth,
-      height: myHeight,
-      contacts: node.contacts,
-      children,
-      subtreeMinY,
-      subtreeMaxY,
-      fillColor: getColorByLevelAvg(node.contacts),
-    };
-  }
+//     return {
+//       org: node.org,
+//       x: startX,
+//       y: startY,
+//       width: boxWidth,
+//       height: myHeight,
+//       contacts: node.contacts,
+//       children,
+//       subtreeMinY,
+//       subtreeMaxY,
+//       fillColor: getColorByLevelAvg(node.contacts),
+//     };
+//   }
 
-  return computePos(root, 0, 0);
-}
+//   return computePos(root, 0, 0);
+// }
 
 //
 // カラー
