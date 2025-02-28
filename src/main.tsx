@@ -16,7 +16,6 @@ Amplify.configure(outputs);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-  {/* <ChakraProvider value={defaultSystem}> */}
   <ChakraProvider >
   <App />
     </ChakraProvider>

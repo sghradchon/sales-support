@@ -30,9 +30,7 @@ interface Organization {
   siblingLevelOrgOrder: number;
   memo: string;
 
-  /** 新規作成時、レイアウト無視で配置するための手動座標(任意) */
-  manualX?: number;
-  manualY?: number;
+
 }
 
 interface Contact {
@@ -443,8 +441,7 @@ const SalesHeatMapPage: React.FC = () => {
           upperLevelOrgId: '',
           siblingLevelOrgOrder: 9999,
           memo: org.memo,
-          manualX: undefined,
-          manualY: undefined,
+
         };
         updateOrganization(updatedOrg);
         return;
@@ -524,7 +521,7 @@ const SalesHeatMapPage: React.FC = () => {
     }
 
     // manualX, manualY 無効化
-    org = { ...org, manualX: undefined, manualY: undefined };
+    org = { ...org};
 
     updateOrganization(org);
   }

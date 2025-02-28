@@ -5,7 +5,7 @@ import { storage } from './storage/resource';
 import { makeslide_pipe } from './function/makeslide_pipe/resource';
 const backend = defineBackend({
   auth,
-  data,
+  data, 
   storage,
   makeslide_pipe
 });
