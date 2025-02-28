@@ -27,7 +27,7 @@
     "react-d3-tree": "^3.6.5",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.1.5",
-    "uuid": "^11.0.5"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.14.0",

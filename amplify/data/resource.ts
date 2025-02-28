@@ -2,8 +2,7 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 
 const schema = a.schema({
   Organization: a.model({
-    id:a.id(),
-    organizationId: a.string(),
+    id: a.id(),
     organizationName: a.string(),
     upperLevelOrgId: a.string(),
     siblingLevelOrgOrder: a.integer(),
@@ -12,11 +11,10 @@ const schema = a.schema({
   }).authorization(allow => [allow.publicApiKey()]),
 
   Contact: a.model({
-    id:a.id(),
-    contactId: a.string(),
+    id: a.id(),
     lastName: a.string(),
     firstName: a.string(),
-    organizationId: a.string(),
+    belongingOrgId: a.string(),
     title: a.string(),
     contactLevel: a.integer(),
     contactDescription: a.string()
