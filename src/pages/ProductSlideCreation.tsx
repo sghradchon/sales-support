@@ -7,6 +7,9 @@ import {
   Text,
   HStack
 } from '@chakra-ui/react';
+import { createCanvas } from 'canvas';
+import { uploadData } from 'aws-amplify/storage';
+
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import outputs from "../../amplify_outputs.json";
 
@@ -17,8 +20,54 @@ import { StorageImage } from '@aws-amplify/ui-react-storage';
 // Cognito認証情報の取得
 import { fetchAuthSession } from 'aws-amplify/auth';
 
+import { v4 as uuidv4 } from 'uuid';
+
+import type { Schema } from "../../amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+// import { Product } from 'aws-cdk-lib/aws-servicecatalog';
+const client = generateClient<Schema>();
+
 const awsRegion = outputs.auth.aws_region;
 const functionName = outputs.custom.makeslide_pipeFunctionName;
+
+
+interface Product {
+  id:string;
+  s3ImageUri:string;
+  name:string;
+  description:string;
+  partIds:string[];
+}
+
+interface Part {
+  id:string;
+  s3ImageUri:string;
+  name:string;
+  description:string;
+}
+
+export const castProductAWSToInterface = (data: any[]) => {
+  return data.map((item) => {
+      return {
+        id: item.id ?? '',
+        s3ImageUri: item.s3ImageUri ?? '',
+        name: item.name ?? '',
+        description: item.description ?? '',
+        partIds: item.partIds ?? '',
+      };
+  });
+};
+
+export const castPartAWSToInterface = (data: any[]) => {
+  return data.map((item) => {
+      return {
+        id: item.id ?? '',
+        s3ImageUri: item.s3ImageUri ?? '',
+        name: item.name ?? '',
+        description: item.description ?? '',
+      };
+  });
+};
 
 interface ProductFile {
   s3path:string;
@@ -32,10 +81,153 @@ const ProductSlideCreation: React.FC = () => {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
 
   const [slideUrl,setSlideUrl] = useState<string>("");
+
+  const [productData,setProductData] = useState<Product[]>([]);
+  const [partData,setPartData] = useState<Part[]>([]);
+
   // =========================
   // (1) 初期ロード時に S3 の files を取得
   // =========================
+  const createRandomDemo = async () => {
+    console.log("creating random data...")
+    // データストア（仮の in-memory 配列）
+    // 10個の Part を作成し、Amplify Data に登録
+    async function createParts(): Promise<Part[]> {
+      const parts: Part[] = [];
+      for (let i = 0; i < 10; i++) {
+        const id_uri = await uploadImageToS3("parts");
+
+
+        const newPart = {
+          id: id_uri[0],
+          s3ImageUri: id_uri[1],
+          name: `part_${id_uri[0]}`,
+          description: `This is a randomly generated part.`,
+        };
+
+        const { errors, data } = await client.models.Part.create(newPart);
+        if (errors) {
+          console.error("Error creating Part:", errors);
+        } else {
+          console.log("datasotre created for part:", data);
+
+          parts.push(data as Part);
+        }
+      }
+      return parts;
+    }
+
+    async function createProducts(parts: Part[]): Promise<void> {
+      for (let i = 0; i < 3; i++) {
+        const selectedPartIds = parts
+          .sort(() => 0.5 - Math.random()) // ランダムにシャッフル
+          .slice(0, Math.floor(Math.random() * 2) + 3) // 3～4個の Part を選択
+          .map(part => part.id);
+        
+        const id_uri = await uploadImageToS3("products");
+
+        const newProduct = {
+          id: id_uri[0],
+          s3ImageUri: `products/product_${id_uri[1]}.jpg`,
+          name: `product_${id_uri[0]}`,
+          description: `This is a randomly generated product.`,
+          partIds: selectedPartIds,
+        };
+    
+        const { errors, data } = await client.models.Product.create(newProduct);
+        if (errors) {
+          console.error("Error creating Product:", errors);
+        }else{
+          console.log("success in creating product: ", data)
+        }
+      }
+    }
+
+
+    // **React環境での幾何学的な画像の生成**
+  async function generateImage(): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const width = 200;
+      const height = 200;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        reject(new Error("Canvas context is not available"));
+        return;
+      }
+
+      // 背景色をランダムに設定
+      ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 80%)`;
+      ctx.fillRect(0, 0, width, height);
+
+      // ランダムな線を描画
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * width, Math.random() * height);
+        ctx.lineTo(Math.random() * width, Math.random() * height);
+        ctx.strokeStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        ctx.lineWidth = Math.random() * 5;
+        ctx.stroke();
+      }
+
+      // Blob に変換して解決
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Blob conversion failed"));
+        }
+      }, "image/png");
+    });
+  }
+    // S3 に画像をアップロードし、URL を取得する関数
+    async function uploadImageToS3(prosorparts:string): Promise<(string[])> {
+      const imageBlob = await generateImage();
+      const id = uuidv4()
+      const uri = `${prosorparts}/${id}.png`;
+
+      const res = await uploadData({
+        path: uri,
+        data: imageBlob,
+      }).result;
+      console.log("success in uploading image to s3: ",res)
+
+      return [id,uri];
+    }
+    
+
+    const parts = await createParts();
+    await createProducts(parts)
+  }
+
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        
+              // Amplify Data API から一覧取得
+        const { data: productRes, errors: productErr } = await client.models.Product.list();
+        const { data: partRes, errors: partErr } = await client.models.Part.list();
+
+        if (productErr || partErr) {
+          console.error(productErr ?? partErr);
+          // toast などで通知してもOK
+          return;
+        }
+        // null→非null 変換
+        const products = castProductAWSToInterface(productRes)
+        const parts = castPartAWSToInterface(partRes)
+        console.log("orgs:",products)
+        setProductData(products || []);
+        setPartData(parts || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+
     const fetchFiles = async () => {
       try {
         // "products/" フォルダ配下のファイル一覧を取得
@@ -63,6 +255,7 @@ const ProductSlideCreation: React.FC = () => {
         console.error('Error listing product images:', error);
       }
     };
+    
 
     fetchFiles();
   }, []);
@@ -180,6 +373,9 @@ const ProductSlideCreation: React.FC = () => {
 
       <Button colorScheme="blue" mt={6} onClick={createSlides}>
         スライドを作成
+      </Button>
+      <Button colorScheme="blue" mt={6} onClick={createRandomDemo}>
+        Demo data の作成
       </Button>
 
 

@@ -6,8 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-local-backend
-lambdas*
+local-backend/
+lambdas/
 .env
 
 node_modules
@@ -25,7 +25,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-src_copy
+src_copy/
 # amplify
 .amplify
 amplify_outputs*

@@ -1,0 +1,41 @@
+[
+    {
+      "contactId": "CONTACT_994422f2-834f-4a17-8e7f-fa955710d064",
+      "CustomerName": "ABC Corporation",
+      "ProductName": "Product A",
+      "OpportunityName": "New Partnership",
+      "Distributor": "Distributor X",
+      "Application": "Application Alpha",
+      "Territory": "North Region",
+      "TargetPrice": 100,
+      "CustomerBudget": 5000,
+      "CompetitorPrice": 90,
+      "CurrentStatus": "Open"
+    },
+    {
+      "contactId": "CONTACT_1659c262-1abd-4d3d-a497-c88d47e7c3c2",
+      "CustomerName": "XYZ Industries",
+      "ProductName": "Product B",
+      "OpportunityName": "Expansion Deal",
+      "Distributor": "Distributor Y",
+      "Application": "Application Bravo",
+      "Territory": "South Region",
+      "TargetPrice": 250,
+      "CustomerBudget": 3000,
+      "CompetitorPrice": 260,
+      "CurrentStatus": "Prospecting"
+    },
+    {
+      "contactId": "CONTACT_eb916a03-0fb6-48c6-8e1f-55972d0a31c1",
+      "CustomerName": "Global Solutions",
+      "ProductName": "Product C",
+      "OpportunityName": "Renewal Opportunity",
+      "Distributor": "Distributor Z",
+      "Application": "Application Charlie",
+      "Territory": "East Region",
+      "TargetPrice": 180,
+      "CustomerBudget": 4000,
+      "CompetitorPrice": 200,
+      "CurrentStatus": "Negotiation"
+    }
+  ]

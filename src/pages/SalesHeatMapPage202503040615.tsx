@@ -10,15 +10,18 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalFooter,
+  // NumberInput,
+  // NumberInputField,
+  // NumberInputStepper,
+  // NumberIncrementStepper,
+  // NumberDecrementStepper,
   useDisclosure,
   Input,
 } from '@chakra-ui/react';
 import { RxReset } from "react-icons/rx";
-import { GripVertical } from 'lucide-react';
-
 import { v4 as uuidv4 } from 'uuid';
-// import activitiesData from "./activities.json";
-// import opportunitiesData from './opportunities.json';
+import activitiesData from "./activities.json";
+import opportunitiesData from './opportunities.json';
 import ContactPage from "./ContactPage";
 
 
@@ -36,6 +39,8 @@ interface Organization {
   upperLevelOrgId: string;
   siblingLevelOrgOrder: number;
   memo: string;
+
+
 }
 
 interface Contact {
@@ -47,30 +52,6 @@ interface Contact {
   contactLevel: number;
   contactDescription: string;
   keyPerson: boolean;
-}
-
-
-interface Opportunity {
-  id: string; //PK
-  contactId: string;
-  CustomerName: string;
-  ProductName: string;
-  OpportunityName: string;
-  Distributor: string;
-  Application: string;
-  Territory: string;
-  TargetPrice: number;
-  CustomerBudget: number;
-  CompetitorPrice: number;
-  CurrentStatus: string;
-  // 他の必要なプロパティがあれば追加
-}
-
-//仮ーーーーーーーーーーーーーーーーーーーーーーーー
-interface Activity {
-  id: string; //PK
-  contactId: string;
-  activity: string;
 }
 
 export const castOrgAWSToInterface = (data: any[]) => {
@@ -100,35 +81,26 @@ export const castContactAWSToInterface = (data: any[]) => {
   );
 };
 
+interface Opportunity {
+  contactId: string;
+  CustomerName: string;
+  ProductName: string;
+  OpportunityName: string;
+  Distributor: string;
+  Application: string;
+  Territory: string;
+  TargetPrice: number;
+  CustomerBudget: number;
+  CompetitorPrice: number;
+  CurrentStatus: string;
+  // 他の必要なプロパティがあれば追加
+}
 
-export const castOpportunityAWSToInterface = (data: any[]): Opportunity[] => {
-  return data.map((item) => {
-    return {
-      id:item.id??'',
-      contactId: item.contactId ?? '',
-      CustomerName: item.CustomerName ?? '',
-      ProductName: item.ProductName ?? '',
-      OpportunityName: item.OpportunityName ?? '',
-      Distributor: item.Distributor ?? '',
-      Application: item.Application ?? '',
-      Territory: item.Territory ?? '',
-      TargetPrice: item.TargetPrice ?? 0,
-      CustomerBudget: item.CustomerBudget ?? 0,
-      CompetitorPrice: item.CompetitorPrice ?? 0,
-      CurrentStatus: item.CurrentStatus ?? '',
-    };
-  });
-};
-
-export const castActivityAWSToInterface = (data: any[]): Activity[] => {
-  return data.map((item) => {
-    return {
-      id:item.id??'',
-      contactId: item.contactId ?? '',
-      activity: item.activity ?? '',
-    };
-  });
-};
+//仮ーーーーーーーーーーーーーーーーーーーーーーーー
+interface Activity {
+  contactId: string;
+  activity: string;
+}
 
 interface OrgTreeNode {
   org: Organization;
@@ -178,13 +150,11 @@ const SalesHeatMapPage: React.FC = () => {
   const [contactData, setContactData] = useState<Contact[]>([]);
   
 
-  const [opportunityData, setOpportunityData] = useState<Opportunity[]>([]);
-  const [activityData, setActivityData] = useState<Activity[]>([]);
-
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(opportunitiesData as any);
+  const [activities, setActivities] = useState<Activity[]>(activitiesData as any);
   
   const [positionedRoot, setPositionedRoot] = useState<PositionedNode | null>(null);
-  const [positionedNewNodes, setPositionedNewNodes] = useState<PositionedNode[]>([]);
-  
+
   // Pan/Zoom
   const [translateX, setTranslateX] = useState(50);
   const [translateY, setTranslateY] = useState(50);
@@ -216,7 +186,6 @@ const SalesHeatMapPage: React.FC = () => {
   //
   // 1) データ読み込み
   //
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -224,26 +193,18 @@ const SalesHeatMapPage: React.FC = () => {
              // Amplify Data API から一覧取得
         const { data: orgRes, errors: orgErr } = await client.models.Organization.list();
         const { data: contactRes, errors: contErr } = await client.models.Contact.list();
-        const { data: oppRes, errors: oppErr } = await client.models.Opportunity.list();
-        const { data: actRes, errors: actErr } = await client.models.Activity.list();
 
-        if (orgErr || contErr|| oppErr || actErr) {
-          console.error(orgErr ?? contErr ?? oppErr ?? actErr);
-          toast({ title:'Create error', status:'error'});
-
+        if (orgErr || contErr) {
+          console.error(orgErr ?? contErr);
           // toast などで通知してもOK
           return;
         }
         // null→非null 変換
         const orgs = castOrgAWSToInterface(orgRes)
         const contacts = castContactAWSToInterface(contactRes)
-        const opps = castOpportunityAWSToInterface(oppRes);
-        const acts = castActivityAWSToInterface(actRes);
-
+        console.log("orgs:",orgs)
         setOrgData(orgs || []);
         setContactData(contacts || []);
-        setOpportunityData(opps || [])
-        setActivityData(acts || []);
       } catch (err) {
         console.error(err);
       }
@@ -258,24 +219,20 @@ const SalesHeatMapPage: React.FC = () => {
     if (!orgData.length) return;
 
     reLayout();
-  }, [orgData, contactData,opportunityData,activityData]);
+  }, [orgData, contactData]);
 
-  function reLayout() {
-    // (A) 従来の orgTree を構築(“NEW” を除外) + レイアウト
-    const mainOrgs = orgData.filter(o => o.upperLevelOrgId !== 'NEW');
-    const root = buildOrgTree(mainOrgs, contactData);
+  const reLayout = () => {
+    console.log("local orgdata: ",orgData)
+    console.log("local contactdata: ",contactData)
+
+    const root = buildOrgTree(orgData, contactData);
     const posRoot = layoutOrgTree(root);
     setPositionedRoot(posRoot);
-    
-    const newOrgs = orgData.filter(o => o.upperLevelOrgId === 'NEW');
-    const newPos = layoutNewNodes(newOrgs);
-    setPositionedNewNodes(newPos);
-  }
+  };
 
   //
   // Contact更新
   //
-
   const updateContact = (updated: Contact) => {
     setContactData((prev) => 
       prev.map(c => 
@@ -302,20 +259,6 @@ const SalesHeatMapPage: React.FC = () => {
     toast({ title:'Updated locally (not saved)', status:'info' });
   }
 
-  // function updateOpportunity(updated: Opportunity) {
-  //   setOpportunityData(prev =>
-  //     prev.map(o => o.id === updated.id ? updated : o)
-  //   );
-  //   toast({ title:'Updated Opportunity locally', status:'info'});
-  // }
-
-  // function updateActivity(updated: Activity) {
-  //   setActivityData(prev =>
-  //     prev.map(a => a.id === updated.id ? updated : a)
-  //   );
-  //   toast({ title:'Updated Activity locally', status:'info'});
-  // }
-
   //
   // 組織追加・削除・リセット
   //
@@ -324,7 +267,7 @@ const SalesHeatMapPage: React.FC = () => {
   
     // 1) まず root候補を探す
     const sorted = [...orgData].sort((a,b)=> a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
-    const rootOrg = sorted.find(o => o.upperLevelOrgId == '');
+    const rootOrg = sorted.find(o => !o.upperLevelOrgId);
     
     if (!rootOrg) {
       toast({
@@ -340,13 +283,12 @@ const SalesHeatMapPage: React.FC = () => {
     const newOrg: Organization = {
       id: newId,
       organizationName: newOrgName.trim(),
-      upperLevelOrgId: 'NEW',
+      upperLevelOrgId: rootOrg?.id || '',
       siblingLevelOrgOrder: 9999,
       memo: ''
     };
   
     setOrgData([...orgData, newOrg]);
-    console.log("orgData",newOrg)
     setNewOrgName('');
     // toast
     toast({ title: 'Added locally (not saved yet)', status: 'info' });
@@ -378,7 +320,7 @@ const SalesHeatMapPage: React.FC = () => {
     return rootOrg ? rootOrg : null;
   }
 
-  const handleAddContactRoot = async () => {
+  const handleAddContact = async () => {
     if (!newContactLastName.trim()) return;
     if (!newContactFirstName.trim()) return;
 
@@ -415,200 +357,170 @@ const SalesHeatMapPage: React.FC = () => {
     toast({ title: 'Contact added locally (root)', status: 'info' });
   }
 
-  const handleAddContactOrg = async (org:Organization) => {
-    if (!newContactLastName.trim()) return;
-    if (!newContactFirstName.trim()) return;
-
-    
-    // 2) 新しい組織
-    const newId = `CONTACT_${uuidv4()}`;
-  // 3) 追加する
-    const newContact: Contact = {
-      id: newId,
-      lastName: newContactLastName.trim(),
-      firstName: newContactFirstName.trim(),
-      belongingOrgId: org.id, // rootに所属
-      title: '',
-      contactLevel: 0,
-      contactDescription: '',
-      keyPerson:false
-    };
   
-    setContactData([...contactData, newContact]);
-    setNewContactLastName('');
-    setNewContactFirstName('');
-
-    // toast
-    toast({ title: `Contact added locally (${org.organizationName})`, status: 'info' });
+  function handleDeleteContact(contactId: string) {
+    setContactData((prev)=> prev.filter((c)=> c.id !== contactId));
+    toast({ title:'Contact deleted locally', status:'info'})
   }
-
-  
-  // function handleDeleteContact(contactId: string) {
-  //   setContactData((prev)=> prev.filter((c)=> c.id !== contactId));
-  //   toast({ title:'Contact deleted locally', status:'info'})
-  // }
-
-
-  const handleAddActivity = (newActivity:Activity) => {
-    setActivityData(prev => [...prev, newActivity]);
-    // 必要に応じて再レイアウトなどを実施
-  };
-
-  // function deleteActivity(activityId: string) {
-  //   setActivityData(prev =>
-  //     prev.filter(a => a.id !== activityId)
-  //   );
-  //   toast({ title:'Deleted Activity locally', status:'info'});
-  // }
-  
-  const handleAddOpportunity = (newOpportunity:Opportunity) => {
-    setOpportunityData(prev => [...prev, newOpportunity]);
-    // 必要に応じて再レイアウトなどを実施
-  };
-
-
-  // function deleteOpportunity(oppId: string) {
-  //   setOpportunityData(prev =>
-  //     prev.filter(o => o.id !== oppId)
-  //   );
-  //   toast({ title:'Deleted Opportunity locally', status:'info'});
-  // }
-
 
   async function saveAllChangesToAmplify() {
     try {
-      // ============== 1) Organization 同期 ==============
-      await syncLocalAndRemote<Organization>({
-        localArray: orgData,
-        listFn: client.models.Organization.list,
-        createFn: client.models.Organization.create,
-        updateFn: client.models.Organization.update,
-        deleteFn: client.models.Organization.delete,
-        castFn: castOrgAWSToInterface,
-        isDifferentFn: isOrgDifferent,
-        getPk: (org)=> org.id,
-      });
-      
-      // ============== 2) Contact 同期 ==============
-      await syncLocalAndRemote<Contact>({
-        localArray: contactData,
-        listFn: client.models.Contact.list,
-        createFn: client.models.Contact.create,
-        updateFn: client.models.Contact.update,
-        deleteFn: client.models.Contact.delete,
-        castFn: castContactAWSToInterface,
-        isDifferentFn: isContactDifferent,
-        getPk: (c)=> c.id,
-      });
+      // ============== 2) ORG 同期 ==============
+
+      // 1) Amplifyから最新一覧を取得
+      const { data: remoteRes, errors } = await client.models.Organization.list();
+      if (errors || !remoteRes) {
+        console.error(errors);
+        toast({ title:'Failed fetch remote data', status:'error'});
+        return;
+      }
+      const remoteOrgs = castOrgAWSToInterface(remoteRes)
   
-      // ============== 3) Opportunity 同期 ==============
-      await syncLocalAndRemote<Opportunity>({
-        localArray: opportunityData,
-        listFn: client.models.Opportunity.list,   // AmplifyのOpportunity
-        createFn: client.models.Opportunity.create,
-        updateFn: client.models.Opportunity.update,
-        deleteFn: client.models.Opportunity.delete,
-        castFn: castOpportunityAWSToInterface,    // 下記で実装
-        isDifferentFn: isOppDifferent,
-        getPk: (o)=> o.id,
-      });
+      // 2) map化
+      const localMap = new Map<string, Organization>();
+      for (const localO of orgData) {
+        localMap.set(localO.id, localO);
+      }
   
-      // ============== 4) Activity 同期 ==============
-      await syncLocalAndRemote<Activity>({
-        localArray: activityData,
-        listFn: client.models.Activity.list,
-        createFn: client.models.Activity.create,
-        updateFn: client.models.Activity.update,
-        deleteFn: client.models.Activity.delete,
-        castFn: castActivityAWSToInterface,
-        isDifferentFn: isActDifferent,
-        getPk: (a)=> a.id,
-      });
+      const remoteMap = new Map<string, typeof remoteOrgs[0]>();
+      for (const r of remoteOrgs) {
+        if (r && r.id) {
+          remoteMap.set(r.id, r);
+        }
+      }
   
-      toast({ title:'All changes saved!', status:'success'});
-      
+      // A) Create => (localにあって remoteに無い)
+      for (const [localId, localObj] of localMap.entries()) {
+        if (!remoteMap.has(localId)) {
+          // create
+          const createPayload = {
+            id: localObj.id,
+            organizationName: localObj.organizationName,
+            upperLevelOrgId: localObj.upperLevelOrgId,
+            siblingLevelOrgOrder: localObj.siblingLevelOrgOrder,
+            memo: localObj.memo
+          };
+          const { data: created, errors } = await client.models.Organization.create(createPayload);
+          console.log("Org Created on AWS: ",created)
+          if (errors) {
+            console.error(errors);
+            toast({ title:'Create error', status:'error'});
+            continue;
+          }
+        }
+      }
+  
+      // B) Update => (両方にあるが内容が異なる)
+      for (const [localId, localObj] of localMap.entries()) {
+        const remoteObj = remoteMap.get(localId);
+        if (remoteObj) {
+          if (isOrgDifferent(localObj, remoteObj)) {
+            // update
+            const updatePayload = {
+              // PK
+              id: localId,
+              organizationName: localObj.organizationName,
+              upperLevelOrgId: localObj.upperLevelOrgId,
+              siblingLevelOrgOrder: localObj.siblingLevelOrgOrder,
+              memo: localObj.memo,
+            };
+            const { data: updated, errors } = await client.models.Organization.update(updatePayload);
+            console.log("Org Updated on AWS: ",updated)
+            if (errors) {
+              console.error(errors);
+              toast({ title:'Update error', status:'error'});
+              continue;
+            }
+          }
+        }
+      }
+  
+      // C) Delete => (remoteにあって localに無い)
+      for (const [remoteId, remoteObj] of remoteMap.entries()) {
+        if (!localMap.has(remoteId)) {
+          // delete
+          const { data: del, errors: e2 } = await client.models.Organization.delete({ id: remoteId });
+          console.log("Org Deleted from AWS: ",del)
+          console.log(remoteObj)
+
+          if (e2) {
+            console.error(e2);
+            toast({ title:'Delete error', status:'error'});
+            continue;
+          }
+        }
+      }
+
+      // ============== 2) CONTACT 同期 ==============
+      const { data: remoteContactRes } = await client.models.Contact.list();
+      const remoteContacts = castContactAWSToInterface(remoteContactRes);
+
+      const localContactMap = new Map<string, Contact>();
+      for (const c of contactData) {
+        localContactMap.set(c.id, c);
+      }
+
+      const remoteContactMap = new Map<string, typeof remoteContacts[0]>();
+      for (const r of remoteContacts) {
+        if (r?.id) {
+          remoteContactMap.set(r.id, r);
+        }
+      }
+
+      // A) Create
+      for (const [localId, localC] of localContactMap.entries()) {
+        if (!remoteContactMap.has(localId)) {
+          console.log("create contact: ",localId)
+
+          await client.models.Contact.create({
+            id: localId,
+            lastName: localC.lastName,
+            firstName: localC.firstName,
+            belongingOrgId: localC.belongingOrgId,
+            title: localC.title,
+            contactLevel: localC.contactLevel,
+            contactDescription: localC.contactDescription
+          });
+        }
+      }
+
+      // B) Update
+      for (const [localId, localC] of localContactMap.entries()) {
+        const remoteC = remoteContactMap.get(localId);
+        if (remoteC && isContactDifferent(localC, remoteC)) {
+          console.log("Update contact: ",localId)
+          await client.models.Contact.update({
+            id: localId,
+            lastName: localC.lastName,
+            firstName: localC.firstName,
+            belongingOrgId: localC.belongingOrgId,
+            title: localC.title,
+            contactLevel: localC.contactLevel,
+            contactDescription: localC.contactDescription
+          });
+        }
+      }
+
+      // C) Delete
+      for (const [remoteId, rC] of remoteContactMap.entries()) {
+        if (!localContactMap.has(remoteId)) {
+          console.log("delete: ",rC)
+          await client.models.Contact.delete({ id: remoteId });
+        }
+
+      }
+
+      // 同期完了 => 再取得
+      toast({ title:'All changes saved', status:'success' });
+      const { data: finalOrgRes } = await client.models.Organization.list();
+      setOrgData(castOrgAWSToInterface(finalOrgRes) as Organization[] || []);
+      const { data: finalContRes } = await client.models.Contact.list();
+      setContactData(castContactAWSToInterface(finalContRes) as Contact[] || []);
+
     } catch(e) {
       console.error(e);
       toast({ title:'saveAllChanges failed', status:'error'});
     }
-  }
-
-  interface SyncLocalRemoteArgs<T> {
-    localArray: T[];
-    listFn: ()=> Promise<{ data?: any, errors?: any }>;  // Amplify .list
-    createFn: (payload: any)=> Promise<{ data?: any, errors?: any }>;
-    updateFn: (payload: any)=> Promise<{ data?: any, errors?: any }>;
-    deleteFn: (payload: any)=> Promise<{ data?: any, errors?: any }>;
-    castFn: (items: any[])=> T[]; // AWS->Local
-    isDifferentFn: (local: T, remote: any)=> boolean;
-    getPk: (item: T)=> string; // PK extractor
-  }
-  
-  async function syncLocalAndRemote<T>(args: SyncLocalRemoteArgs<T>) {
-    const {
-      localArray, listFn, createFn, updateFn, deleteFn,
-      castFn, isDifferentFn, getPk
-    } = args;
-  
-    // 1) list remote
-    const { data: remoteRes, errors } = await listFn();
-    if (errors || !remoteRes) {
-      throw new Error('Failed to list remote data');
-    }
-    // cast
-    const remoteItems = castFn(remoteRes|| []);
-  
-    // 2) map
-    const localMap = new Map<string, T>();
-    for (const l of localArray) {
-      localMap.set(getPk(l), l);
-    }
-  
-    const remoteMap = new Map<string, any>();
-    for (const r of remoteItems) {
-      remoteMap.set(getPk(r), r);
-    }
-  
-    // A) create => localにあるが remoteに無い
-    for (const [localPk, localObj] of localMap.entries()) {
-      if (!remoteMap.has(localPk)) {
-        // create
-        const payload = { ...localObj };
-        // payloadに "id" があるならOK. すべて Amplifyに渡したいフィールドをspread
-        const { data: _, errors } = await createFn(payload);
-        if (errors) {
-          // continue
-        }
-      }
-    }
-  
-    // B) update => 両方にあり diff
-    for (const [localPk, localObj] of localMap.entries()) {
-      const remoteObj = remoteMap.get(localPk);
-      if (remoteObj) {
-        if (isDifferentFn(localObj, remoteObj)) {
-          const payload = { ...localObj };
-          const { data: _, errors } = await updateFn(payload);
-          if (errors) {
-            console.error(errors);
-          }
-        }
-      }
-    }
-  
-    // C) delete => remoteにあるが localに無い
-    for (const [remPk, _] of remoteMap.entries()) {
-      if (!localMap.has(remPk)) {
-        const payload = { id: remPk }; // PK
-        const { data: _, errors } = await deleteFn(payload);
-        if (errors) {
-          console.error(errors);
-        }
-      }
-    }
-  
-    // 仕上げ: 返り値は  “最終的に list した remote items” か？
-    // ここでは "何もしない"。上位で再取得するならそれでもOK
   }
   
   // ヘルパー
@@ -630,55 +542,29 @@ const SalesHeatMapPage: React.FC = () => {
     return false;
   }
 
-  function isOppDifferent(localO: Opportunity, remoteO: any): boolean {
-    if (localO.contactId !== remoteO.contactId) return true;
-    if (localO.CustomerName !== remoteO.CustomerName) return true;
-    if (localO.ProductName !== remoteO.ProductName) return true;
-    if (localO.OpportunityName !== remoteO.OpportunityName) return true;
-    if (localO.Distributor !== remoteO.Distributor) return true;
-    if (localO.Application !== remoteO.Application) return true;
-    if (localO.Territory !== remoteO.Territory) return true;
-    if (localO.TargetPrice !== remoteO.TargetPrice) return true;
-    if (localO.CustomerBudget !== remoteO.CustomerBudget) return true;
-    if (localO.CompetitorPrice !== remoteO.CompetitorPrice) return true;
-    if (localO.CurrentStatus !== remoteO.CurrentStatus) return true;
-    return false;
-  }
-  
-  function isActDifferent(localA: Activity, remoteA: any): boolean {
-    if (localA.contactId !== remoteA.contactId) return true;
-    if (localA.activity !== remoteA.activity) return true;
-    return false;
-  }
-
-  async function handleResetData() {
+  const handleResetData = async () => {
     try {
-      // 1) Org
       const { data: orgRes, errors: orgErr } = await client.models.Organization.list();
-      if (orgErr) { throw new Error('org list error'); }
-      setOrgData(castOrgAWSToInterface(orgRes || []));
-  
-      // 2) Contact
-      const { data: contRes, errors: contErr } = await client.models.Contact.list();
-      if (contErr) { throw new Error('contact list error'); }
-      setContactData(castContactAWSToInterface(contRes || []));
-  
-      // 3) Opportunity
-      const { data: oppRes, errors: oppErr } = await client.models.Opportunity.list();
-      if (oppErr) { throw new Error('opp list error'); }
-      setOpportunityData(castOpportunityAWSToInterface(oppRes || []));
-  
-      // 4) Activity
-      const { data: actRes, errors: actErr } = await client.models.Activity.list();
-      if (actErr) { throw new Error('act list error'); }
-      setActivityData(castActivityAWSToInterface(actRes || []));
-  
-      toast({ title:'Reset to DB data done', status:'info'});
-    } catch(e) {
-      console.error(e);
-      toast({ title:'resetAllData failed', status:'error'});
+      const { data: contactRes, errors: contErr } = await client.models.Contact.list();
+
+      if (orgErr || contErr) {
+        console.error(orgErr ?? contErr);
+        // toast などで通知してもOK
+        return;
+      }
+      // null→非null 変換
+      const orgs = castOrgAWSToInterface(orgRes)
+      const contacts = castContactAWSToInterface(contactRes)
+      setOrgData(orgs || []);
+      setContactData(contacts || []);
+
+
+      toast({ title: 'Reset to initial data', status: 'info', duration: 2000 });
+    } catch (err) {
+      console.error(err);
     }
-  }
+  };
+
   //
   // 3) Pan/Zoom + pointer events
   //
@@ -876,131 +762,67 @@ const SalesHeatMapPage: React.FC = () => {
   };
 
   /** ★★★ ここが「親変更 + 並び順指定」を同時に実行する関数 ★★★ */
-  function dropEntityForOrg(
-    org: Organization,
-    dropTarget: Organization,
-    mode: 'parent'|'before'|'after'
-  ) {
-    // 「orgがleafかどうか」判定
-    const orgIsLeaf = !orgData.some(child => child.upperLevelOrgId === org.id);
-    // 「dropTargetに子がいるかどうか」判定
-    const targetHasChildren = orgData.some(child => child.upperLevelOrgId === dropTarget.id);
-  
-    if (mode === 'parent') {
-      // もし "dropTargetに子がいる + orgはleaf" => insertBetween
-      if (targetHasChildren && orgIsLeaf) {
-        insertBetweenLogic(org, dropTarget);
+  function dropEntityForOrg(org: Organization, dropTarget: Organization, mode: 'parent'|'before'|'after') {
+    // oldParent
+    const oldParentId = org.upperLevelOrgId || '';
+    // newParent
+    let newParentId: string;
+    
+    if (mode==='parent') {
+      // dropTarget を新しい親にする
+      newParentId = dropTarget.id;
+    } else {
+      // 'before' or 'after' → dropTargetと同じ親を共有する
+      newParentId = dropTarget.upperLevelOrgId || '';
+    }
+    
+    const sameParent = (oldParentId === newParentId);
+
+    // 1) newParentの子を取得
+    const siblings = orgData.filter(o => o.upperLevelOrgId===newParentId);
+    // 2) sort
+    const sorted = [...siblings].sort((a,b)=> a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
+    // 3) parent変わるなら org.upperLevelOrgId = newParentId
+    if (!sameParent) {
+      org = { ...org, upperLevelOrgId: newParentId };
+    } else {
+      // same parent → reorder
+      // remove org from sorted
+      const withoutOrg = sorted.filter(x=> x.id!==org.id);
+      sorted.length=0;
+      withoutOrg.forEach(x=> sorted.push(x));
+    }
+    
+    if (mode==='parent') {
+      // 末尾に挿入
+      const maxOrder = sorted.reduce((acc, s)=> Math.max(acc, s.siblingLevelOrgOrder),0);
+      org.siblingLevelOrgOrder = maxOrder+10;
+      
+    } else {
+      // 'before' or 'after'
+      const targetIndex = sorted.findIndex(x=> x.id===dropTarget.id);
+      if(targetIndex<0){
+        // fallback => 末尾
+        sorted.push(org);
       } else {
-        // 通常の親変更
-        normalParentLogic(org, dropTarget);
+        if(mode==='before'){
+          sorted.splice(targetIndex,0,org);
+        } else {
+          sorted.splice(targetIndex+1,0,org);
+        }
       }
-      return;
+      // 10刻み割り当て
+      let base=10;
+      for(const s of sorted){
+        s.siblingLevelOrgOrder=base;
+        base+=10;
+      }
     }
-    else if (mode === 'before') {
-      insertBeforeLogic(org, dropTarget);
-      return;
-    }
-    else if (mode === 'after') {
-      insertAfterLogic(org, dropTarget);
-      return;
-    }
-  }
-  
-  /** 【A】"親変更" 通常ロジック */
-  function normalParentLogic(org: Organization, dropTarget: Organization) {
-    // 1) org の 新たな親 = dropTarget
-    const newParentId = dropTarget.id;
-    
-    org = { ...org, upperLevelOrgId: newParentId };
-    
-    // 2) siblingsを取得 (同じ親で upperLevelOrgId===newParentId )
-    const siblings = orgData.filter(o => o.upperLevelOrgId === newParentId);
-  
-    // 3) 末尾にしたいなら「既存の siblings の maxOrder + 10」
-    // (兄弟のオーダーは保ったまま)
-    const maxOrder = siblings.reduce((acc, s) => Math.max(acc, s.siblingLevelOrgOrder), 0);
-    org.siblingLevelOrgOrder = maxOrder + 10;
-  
-    // 4) update local
-    updateOrganization(org); 
-    toast({ title: 'Set new parent (normal)', status: 'info' });
-  }
-  
-  /** 【B】挟むロジック: dropTargetに子がある & orgがleaf */
-  function insertBetweenLogic(org: Organization, dropTarget: Organization) {
-    // 1) dropTargetの旧 親
-    const oldParentId = dropTarget.id;
-    
-    // 2) leaf(org) を dropTarget.oldParent の子にする
-    org.upperLevelOrgId = oldParentId || '';
-  
-    // 3) dropTarget (＆必要なら その兄弟)を org の子にする
-    //   ここでは “ドロップ先 + その兄弟” すべてをまとめて移す例
-    const siblings = orgData.filter(o => o.upperLevelOrgId === oldParentId);
-    
-    for (const sib of siblings) {
-      if (sib.id === org.id) continue; // 自分自身を子にしない
-      // 兄弟の siblingLevelOrgOrder はそのまま(再割当しない)
-      sib.upperLevelOrgId = org.id;
-    }
-  
-    updateOrganization({ ...org });
-    // siblings も setOrgData で一括書き換えるか、個別に updateOrganization() するかはお好み
-    setOrgData(prev =>
-      prev.map(o => {
-        if (o.id === org.id) {
-          return { ...org };
-        }
-        if (siblings.some(s=> s.id===o.id)) {
-          const s2 = siblings.find(x=> x.id===o.id)!;
-          return { ...s2 };
-        }
-        return o;
-      })
-    );
-  
-    toast({ title: 'Inserted Between!', status: 'info' });
-  }
-  
-  /** 【C】insertBeforeLogic: dropTargetの手前に挿入する */
-  function insertBeforeLogic(org: Organization, dropTarget: Organization) {
-    // 1) 新しい親 = dropTarget の親
-    const newParentId = dropTarget.upperLevelOrgId || '';
-    org = { ...org, upperLevelOrgId: newParentId };
-  
-    // 2) "org" の siblingLevelOrgOrder を dropTarget より少し小さくする
-    //    => 兄弟のオーダーはそのまま維持
-    //    => 例: dropTarget.siblingLevelOrgOrder - 0.1
-    const newOrder = dropTarget.siblingLevelOrgOrder - 1;
-    org.siblingLevelOrgOrder = newOrder;
-  
-    // 3) update
+
+    // manualX, manualY 無効化
+    org = { ...org};
+
     updateOrganization(org);
-    setOrgData(prev =>
-      prev.map(o => (o.id===org.id)? {...org} : o)
-    );
-  
-    toast({ title: 'Insert Before done', status: 'info' });
-  }
-  
-  /** 【D】insertAfterLogic: dropTargetの後ろに挿入する */
-  function insertAfterLogic(org: Organization, dropTarget: Organization) {
-    // 1) 新しい親 = dropTarget の親
-    const newParentId = dropTarget.upperLevelOrgId || '';
-    org = { ...org, upperLevelOrgId: newParentId };
-  
-    // 2) org の siblingLevelOrgOrder = dropTarget.siblingLevelOrgOrder + 0.1
-    //   => keep existing sibling orders
-    const newOrder = dropTarget.siblingLevelOrgOrder + 1;
-    org.siblingLevelOrgOrder = newOrder;
-  
-    // 3) update
-    updateOrganization(org);
-    setOrgData(prev =>
-      prev.map(o => (o.id===org.id)? {...org} : o)
-    );
-  
-    toast({ title: 'Insert After done', status: 'info' });
   }
 
 
@@ -1088,30 +910,22 @@ const SalesHeatMapPage: React.FC = () => {
   function layoutOrgTree(root: OrgTreeNode): PositionedNode {
     const horizontalGap = 180;
     const verticalGap = 40;
-    const paddingX = 0;
-
 
     function computePos(node: OrgTreeNode, startX: number, startY: number): PositionedNode {
       const isLeaf = (node.children.length === 0);
-      let boxWidth = 150;
-      if (isLeaf && node.contacts.length > 0) {
-        const contactWidths = node.contacts.map((contact) => {
-          const label = truncateContactLabel(contact);
-          return measureTextWidth(label) + paddingX * 2;
-        });
-        const totalWidth = contactWidths.reduce((sum, w) => sum + w, 0);
-        const totalGapWidth = (node.contacts.length - 1) * 15;
-        boxWidth = Math.max(150, totalWidth + totalGapWidth + 50);
-      }
+      const boxWidth = isLeaf
+        ? (node.contacts.length * 80 + 60)
+        : 150;
 
-
-      let myHeight = BOX_TOP_PADDING + 20;
-      if (!isLeaf) {
+      let myHeight = 0;
+      if (isLeaf) {
+        myHeight = BOX_TOP_PADDING + 20;
+      } else {
         const cCount = node.contacts.length;
-        const contactArea = cCount * CONTACT_BOX_HEIGHT + (cCount > 0 ? (cCount - 1) * CONTACT_BOX_GAP : 0);
-        myHeight = Math.max(myHeight, BOX_TOP_PADDING + contactArea);
+        const contactArea = cCount * CONTACT_BOX_HEIGHT
+          + (cCount > 0 ? (cCount - 1) * CONTACT_BOX_GAP : 0);
+        myHeight = BOX_TOP_PADDING + contactArea;
       }
-
 
       let childY = startY;
       const children: PositionedNode[] = [];
@@ -1174,92 +988,6 @@ const SalesHeatMapPage: React.FC = () => {
     );
   }
 
-  function layoutNewNodes(newOrgs: Organization[]): PositionedNode[] {
-    // 単純に "1ノード = 1小BOX" を横or縦に並べる例
-    // ここでは "y=someFixed" で同じ高さに並べ、
-    //   x をずらして配置する
-  
-    const nodeWidth = 120, nodeHeight = 50;
-    const gap = 20;
-    let currentX = 0;
-    let currentY = 250; // 例えば mainツリーの下あたり
-    
-    const result: PositionedNode[] = [];
-    
-    for (const org of newOrgs) {
-      const pNode: PositionedNode = {
-        org,
-        x: currentX,
-        y: currentY,
-        width: nodeWidth,
-        height: nodeHeight,
-        contacts: [],       // NEWノードなので contact表示しない or 別途調整
-        children: [],
-        subtreeMinY: currentY,
-        subtreeMaxY: currentY + nodeHeight,
-        fillColor: '#ffe',  // 適当
-      };
-      result.push(pNode);
-  
-      currentX += nodeWidth + gap;
-    }
-    return result;
-  }
-
-  function renderNewNodes(nodes: PositionedNode[]) {
-    return (
-      <>
-        {nodes.map((pNode) => {
-          return (
-            <g key={pNode.org.id} transform={`translate(${pNode.x}, ${pNode.y})`}>
-              <rect
-                width={pNode.width}
-                height={pNode.height}
-                fill={pNode.fillColor}
-                stroke="#333"
-                strokeWidth={1.5}
-                rx={6}
-                ry={6}
-                style={{ cursor: 'pointer' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedEntity({ type: 'org', id:pNode.org.id });
-                  onOpen();
-                }}
-              />
-              <text x={10} y={20} fontSize={14} fill="#000">
-                {pNode.org.organizationName} (NEW)
-              </text>
-              
-              {/* ドラッグハンドル */}
-              <rect
-                x={pNode.width - 30}
-                y={5}
-                width={25}
-                height={25}
-                fill="#aaa"
-                style={{ cursor: 'grab' }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  setDragCandidate({
-                    entityType: 'org',
-                    entityId: pNode.org.id,
-                    startX: e.clientX,
-                    startY: e.clientY
-                  });
-                  document.body.style.userSelect = 'none';
-                }}
-              />
-              <text x={pNode.width - 25} y={23} fontSize={12} fill="#000">
-                ≡
-              </text>
-            </g>
-          );
-        })}
-      </>
-    );
-  }
-
   
 
   //
@@ -1288,30 +1016,31 @@ const SalesHeatMapPage: React.FC = () => {
           onClick={onOrgBoxClick}
         />
         <text x={10} y={20} fontSize={14} fill="#000">
-          {node.org.organizationName} 
+          {node.org.organizationName} (order={node.org.siblingLevelOrgOrder})
         </text>
 
-        
-          <foreignObject
-            x={node.width - 24}
-            y={5}
-            width={25}
-            height={25}
-            style={{ cursor: 'grab' }}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              setDragCandidate({
-                entityType: 'org',
-                entityId: node.org.id,
-                startX: e.clientX,
-                startY: e.clientY
-              });
-              document.body.style.userSelect = 'none';
-            }}
-          >
-            <GripVertical size={20} color="#888" style={{ pointerEvents: 'none', width: '100%', height: '100%' }} />
-
-          </foreignObject>
+        {/* ドラッグハンドル */}
+        <rect
+          x={node.width - 30}
+          y={5}
+          width={25}
+          height={25}
+          fill="#aaa"
+          style={{ cursor: 'grab' }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setDragCandidate({
+              entityType: 'org',
+              entityId: node.org.id,
+              startX: e.clientX,
+              startY: e.clientY
+            });
+            document.body.style.userSelect = 'none';
+          }}
+        />
+        <text x={node.width - 25} y={23} fontSize={12} fill="#000">
+          ≡
+        </text>
 
         {/* ハイライト */}
         {dragOverOrgId === node.org.id
@@ -1332,24 +1061,12 @@ const SalesHeatMapPage: React.FC = () => {
   // 9) Contact描画
   //
   function renderContactsVertical(node: PositionedNode) {
-    const contactHeight = CONTACT_BOX_HEIGHT;
-    const gap = CONTACT_BOX_GAP;
-    const paddingX = 10;
-  
-    let cumulativeY = BOX_TOP_PADDING - 5; // 開始位置調整
-  
-    return node.contacts.map((contact) => {
-      const label = truncateContactLabel(contact);
-      const textWidth = measureTextWidth(label);
-      const contactWidth = textWidth + paddingX * 2;
-  
-      const currentY = cumulativeY;
-      cumulativeY += contactHeight + gap;
-  
+    return node.contacts.map((contact, i) => {
+      const cy = BOX_TOP_PADDING + i * (CONTACT_BOX_HEIGHT + CONTACT_BOX_GAP);
       return (
         <g
           key={contact.id}
-          transform={`translate(10, ${currentY})`}
+          transform={`translate(10, ${cy})`}
           style={{ cursor: 'grab' }}
           onPointerDown={(e) => {
             e.stopPropagation();
@@ -1363,108 +1080,54 @@ const SalesHeatMapPage: React.FC = () => {
           }}
         >
           <rect
-            width={contactWidth}
-            height={contactHeight}
+            width={node.width - 20}
+            height={CONTACT_BOX_HEIGHT}
+            // fill={getColorByLevel(contact.contactLevel)}
             fill={contactHasOpportunity(contact.id) ? "#DAFFF1" : "#ffffff"}
-            stroke={contact.keyPerson ? "#0ACF83" : "#000"}
+
+            stroke="#000"
             strokeWidth={1}
-            rx={8}
-            ry={8}
           />
-          <text x={paddingX} y={15} fontSize={12} fill="#000">
-            {label}
+          <text x={5} y={15} fontSize={12} fill="#000">
+            {truncateContactLabel(contact)}
           </text>
-          {getActivityCount(contact.id) > 0 && (
-            <>
-              <circle
-                cx={contactWidth - 2}
-                cy={2}
-                r={7}
-                fill="#fff"
-                stroke="#0ACF83"
-                strokeWidth={1}
-              />
-              <text
-                x={contactWidth - 4}
-                y={5}
-                fontSize={8}
-                fill="#0ACF83"
-              >
-                {getActivityCount(contact.id)}
-              </text>
-            </>
-          )}
         </g>
       );
     });
   }
-  
 
   function renderContactsHorizontal(node: PositionedNode) {
-    const contactHeight = CONTACT_BOX_HEIGHT;
+    const contactWidth = 80;
     const gap = 5;
-    const paddingX = 5;
-  
-    let cumulativeX = 10; // 最初の位置から始める
-  
-    return node.contacts.map((contact) => {
-      const label = truncateContactLabel(contact);
-      const textWidth = measureTextWidth(label);
-      const contactWidth = textWidth + paddingX * 2;
-  
-      const currentX = cumulativeX; // 現在のrectのX位置
-      cumulativeX += contactWidth + gap; // 次のrect用に累積
-  
-      const cy = 40 - 5;
-  
+    return node.contacts.map((c, i) => {
+      const cx = 10 + i * (contactWidth + gap);
+      const cy = 40;
       return (
         <g
-          key={contact.id}
-          transform={`translate(${currentX}, ${cy})`}
+          key={c.id}
+          transform={`translate(${cx}, ${cy})`}
           style={{ cursor: 'grab' }}
           onPointerDown={(e) => {
             e.stopPropagation();
             setDragCandidate({
               entityType: 'contact',
-              entityId: contact.id,
+              entityId: c.id,
               startX: e.clientX,
-              startY: e.clientY,
+              startY: e.clientY
             });
             document.body.style.userSelect = 'none';
           }}
         >
           <rect
             width={contactWidth}
-            height={contactHeight}
-            fill={contactHasOpportunity(contact.id) ? "#DAFFF1" : "#ffffff"}
-            stroke={contact.keyPerson ? "#0ACF83" : "#000"}
+            height={CONTACT_BOX_HEIGHT}
+            fill={contactHasOpportunity(c.id) ? "#DAFFF1" : "#ffffff"}
+            stroke="#000"
             strokeWidth={1}
-            rx={8}
-            ry={8}
           />
-          <text x={paddingX} y={15} fontSize={12} fill="#000">
-            {label}
+          <text x={5} y={15} fontSize={12} fill="#000">
+            {truncateContactLabel(c)}
           </text>
-          {getActivityCount(contact.id) > 0 && (
-            <>
-              <circle
-                cx={contactWidth-2}
-                cy={2}
-                r={7}
-                fill="#fff"
-                stroke="#0ACF83"
-                strokeWidth={1}
-              />
-              <text
-                x={contactWidth-4}
-                y={5}
-                fontSize={8}
-                fill="#0ACF83"
-              >
-                {getActivityCount(contact.id)}
-              </text>
-            </>
-          )}
         </g>
       );
     });
@@ -1539,21 +1202,6 @@ const SalesHeatMapPage: React.FC = () => {
             <Box>Parent: {org.upperLevelOrgId}</Box>
             <Box>Order: {org.siblingLevelOrgOrder}</Box>
             <Box>memo: {org.memo}</Box>
-            <Input
-              placeholder="姓"
-              value={newContactLastName}
-              onChange={(e) => setNewContactLastName(e.target.value)}
-              width="100px"
-              mr={2}
-            />
-            <Input
-              placeholder="名"
-              value={newContactFirstName}
-              onChange={(e) => setNewContactFirstName(e.target.value)}
-              width="100px"
-              mr={2}
-            />
-            <Button onClick={()=>handleAddContactOrg(org)}>人員追加</Button>
             <Box mt={4}>
               <Button
                 colorScheme="red"
@@ -1571,7 +1219,51 @@ const SalesHeatMapPage: React.FC = () => {
           </ModalFooter>
         </>
       );
-    
+    // } else {
+    //   const c = contactData.find((ct) => ct.id === selectedEntity.id);
+    //   if (!c) return <Box>Not found</Box>;
+    //   return (
+    //     <>
+    //       <ModalHeader>Contact情報</ModalHeader>
+    //       <ModalCloseButton />
+    //       <ModalBody>
+    //         <Box>{c.lastName} {c.firstName} ({c.title})</Box>
+    //         <Box>id: {c.id}</Box>
+    //         <Box mt={2}>Level: {c.contactLevel}</Box>
+    //         <NumberInput
+    //           min={0}
+    //           max={5}
+    //           value={c.contactLevel}
+    //           onChange={(_, val) => {
+    //             if (val >= 0 && val <= 5) {
+    //               updateContact({ ...c, contactLevel: val });
+    //             }
+    //           }}
+    //         >
+    //           <NumberInputField />
+    //           <NumberInputStepper>
+    //             <NumberIncrementStepper/>
+    //             <NumberDecrementStepper/>
+    //           </NumberInputStepper>
+    //         </NumberInput>
+    //         <Box mt={4}>
+    //           <Button
+    //             colorScheme="red"
+    //             onClick={() => {
+    //               onClose();
+    //               handleDeleteContact(c.id);
+    //             }}
+    //           >
+    //             削除
+    //           </Button>
+    //         </Box>
+    //       </ModalBody>
+    //       <ModalFooter>
+    //         <Button onClick={onClose}>閉じる</Button>
+    //       </ModalFooter>
+    //     </>
+    //   );
+    // }
     } else { const c = contactData.find((x) => x.id === selectedEntity.id);
         if (!c) return <Box>Contactが見つかりません</Box>;
 
@@ -1581,8 +1273,8 @@ const SalesHeatMapPage: React.FC = () => {
           onClose={onClose} 
           onAddActivity={handleAddActivity}
           onAddOpportunity={handleAddOpportunity}
-          activities={activityData}           // 追加
-          opportunities={opportunityData} 
+          activities={activities}           // 追加
+          opportunities={opportunities} 
         />
         );
       }
@@ -1644,13 +1336,23 @@ const SalesHeatMapPage: React.FC = () => {
 
   // 指定の contactId に対して、opportunity があるかチェックする
   function contactHasOpportunity(contactId: string): boolean {
-    return opportunityData.filter((opp: { contactId: string }) => opp.contactId === contactId).length > 0;
+    return opportunities.filter((opp: { contactId: string }) => opp.contactId === contactId).length > 0;
   }
 
   // 各 contactId に紐づく activities の数を返す関数
   function getActivityCount(contactId: string): number {
-    return activityData.filter((act: { contactId: string }) => act.contactId === contactId).length;
+    return activities.filter((act: { contactId: string }) => act.contactId === contactId).length;
   }
+
+  const handleAddActivity = (newActivity:Activity) => {
+    setActivities(prev => [...prev, newActivity]);
+    // 必要に応じて再レイアウトなどを実施
+  };
+  
+  const handleAddOpportunity = (newOpportunity:Opportunity) => {
+    setOpportunities(prev => [...prev, newOpportunity]);
+    // 必要に応じて再レイアウトなどを実施
+  };
 
   //
   // レンダリング
@@ -1697,7 +1399,7 @@ const SalesHeatMapPage: React.FC = () => {
           width="100px"
           mr={2}
         />
-        <Button onClick={handleAddContactRoot}>人員追加</Button>
+        <Button onClick={handleAddContact}>人員追加</Button>
         
       </Box>
 
@@ -1724,7 +1426,6 @@ const SalesHeatMapPage: React.FC = () => {
         >
           <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
             {positionedRoot && renderTree(positionedRoot)}
-            {positionedNewNodes && renderNewNodes(positionedNewNodes)}
           </g>
         </svg>
 
@@ -1765,19 +1466,11 @@ function getColorByLevel(level: number) {
 
 function truncateContactLabel(c: Contact) {
   const full = `${c.lastName} ${c.firstName}`;
-  if (full.length > 8) {
-    return full.slice(0, 7) + '…';
+  if (full.length > 15) {
+    return full.slice(0, 14) + '…';
   }
   return full;
 }
-
-const measureTextWidth = (text: string, fontSize = 12, fontFamily = 'Arial'): number => {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  context!.font = `${fontSize}px ${fontFamily}`;
-  return context!.measureText(text).width;
-};
-
 
 //
 // エクスポート
