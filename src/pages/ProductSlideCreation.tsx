@@ -7,7 +7,7 @@ import {
   Text,
   HStack
 } from '@chakra-ui/react';
-import { createCanvas } from 'canvas';
+// import { createCanvas } from 'canvas';
 import { uploadData } from 'aws-amplify/storage';
 
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
@@ -31,13 +31,13 @@ const awsRegion = outputs.auth.aws_region;
 const functionName = outputs.custom.makeslide_pipeFunctionName;
 
 
-interface Product {
-  id:string;
-  s3ImageUri:string;
-  name:string;
-  description:string;
-  partIds:string[];
-}
+// interface Product {
+//   id:string;
+//   s3ImageUri:string;
+//   name:string;
+//   description:string;
+//   partIds:string[];
+// }
 
 interface Part {
   id:string;
@@ -82,8 +82,8 @@ const ProductSlideCreation: React.FC = () => {
 
   const [slideUrl,setSlideUrl] = useState<string>("");
 
-  const [productData,setProductData] = useState<Product[]>([]);
-  const [partData,setPartData] = useState<Part[]>([]);
+  // const [productData,setProductData] = useState<Product[]>([]);
+  // const [partData,setPartData] = useState<Part[]>([]);
 
   // =========================
   // (1) 初期ロード時に S3 の files を取得
@@ -204,28 +204,28 @@ const ProductSlideCreation: React.FC = () => {
   }
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
+    // const loadData = async () => {
+    //   try {
         
-              // Amplify Data API から一覧取得
-        const { data: productRes, errors: productErr } = await client.models.Product.list();
-        const { data: partRes, errors: partErr } = await client.models.Part.list();
+    //           // Amplify Data API から一覧取得
+    //     const { data: productRes, errors: productErr } = await client.models.Product.list();
+    //     const { data: partRes, errors: partErr } = await client.models.Part.list();
 
-        if (productErr || partErr) {
-          console.error(productErr ?? partErr);
-          // toast などで通知してもOK
-          return;
-        }
-        // null→非null 変換
-        const products = castProductAWSToInterface(productRes)
-        const parts = castPartAWSToInterface(partRes)
-        console.log("orgs:",products)
-        setProductData(products || []);
-        setPartData(parts || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+    //     if (productErr || partErr) {
+    //       console.error(productErr ?? partErr);
+    //       // toast などで通知してもOK
+    //       return;
+    //     }
+    //     // null→非null 変換
+    //     const products = castProductAWSToInterface(productRes)
+    //     const parts = castPartAWSToInterface(partRes)
+    //     console.log("orgs:",products)
+    //     setProductData(products || []);
+    //     setPartData(parts || []);
+    //   } catch (err) {
+    //     console.error(err);
+    //   }
+    // };
 
 
     const fetchFiles = async () => {
