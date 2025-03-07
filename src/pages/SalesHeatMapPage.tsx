@@ -326,6 +326,7 @@ const SalesHeatMapPage: React.FC = () => {
     const sorted = [...orgData].sort((a,b)=> a.siblingLevelOrgOrder - b.siblingLevelOrgOrder);
     const rootOrg = sorted.find(o => o.upperLevelOrgId == '');
     
+    let upperLevelOrgId = "NEW"
     if (!rootOrg) {
       toast({
         title: 'No existing root found.',
@@ -333,6 +334,8 @@ const SalesHeatMapPage: React.FC = () => {
         duration: 2000,
       });
       // return;
+      upperLevelOrgId = ""
+
     }
   
     // 2) 新しい組織
@@ -340,7 +343,7 @@ const SalesHeatMapPage: React.FC = () => {
     const newOrg: Organization = {
       id: newId,
       organizationName: newOrgName.trim(),
-      upperLevelOrgId: 'NEW',
+      upperLevelOrgId: upperLevelOrgId,
       siblingLevelOrgOrder: 9999,
       memo: ''
     };
