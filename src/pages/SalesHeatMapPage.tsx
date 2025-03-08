@@ -694,6 +694,7 @@ const SalesHeatMapPage: React.FC = () => {
 
   const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (isPanningRef.current) {
+      return;//pan無効
       const dx = e.clientX - lastPointerPosRef.current.x;
       const dy = e.clientY - lastPointerPosRef.current.y;
       setTranslateX((prev) => prev + dx);
@@ -796,15 +797,28 @@ const SalesHeatMapPage: React.FC = () => {
     document.body.style.userSelect = 'auto';
   };
 
-  const onSvgWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const zoomFactor = 0.1;
-    if (e.deltaY < 0) {
-      setScale((prev) => Math.min(prev + zoomFactor, 5));
-    } else {
-      setScale((prev) => Math.max(prev - zoomFactor, 0.2));
-    }
+  // const onSvgWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+  //   e.preventDefault();
+  //   const zoomFactor = 0.1;
+  //   if (e.deltaY < 0) {
+  //     setScale((prev) => Math.min(prev + zoomFactor, 5));
+  //   } else {
+  //     setScale((prev) => Math.max(prev - zoomFactor, 0.2));
+  //   }
+  // };
+
+  const MIN_SCALE = 0.2;
+  const MAX_SCALE = 5.0;  
+
+   // 拡大ボタン
+   const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev * 1.2, MAX_SCALE));
   };
+  // 縮小ボタン
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev / 1.2, MIN_SCALE));
+  };
+
 
   function isDescendant(root: PositionedNode, potentialAncestorId: string, checkId: string): boolean {
     // 1) potentialAncestorId のノードを探す
@@ -1671,6 +1685,8 @@ const SalesHeatMapPage: React.FC = () => {
       <Button colorScheme="blue" onClick={saveAllChangesToAmplify} mr={4}>
         SAVE
       </Button>
+      <Button onClick={handleZoomIn} mr={1} w="30px" h="30px" borderRadius="full">＋</Button>
+        <Button onClick={handleZoomOut}　mr={1} w="30px" h="30px" borderRadius="full">－</Button>
 
         <Box onClick={handleResetData} cursor="pointer">
                   <RxReset />
@@ -1723,7 +1739,7 @@ const SalesHeatMapPage: React.FC = () => {
           onPointerMove={onSvgPointerMove}
           onPointerUp={onSvgPointerUp}
           onPointerLeave={onSvgPointerLeave}
-          onWheel={onSvgWheel}
+          // onWheel={onSvgWheel}
         >
           <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
             {positionedRoot && renderTree(positionedRoot)}
