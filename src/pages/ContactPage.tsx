@@ -3,38 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 // ========== 型定義例 ==========
 // 実際のアプリケーションでは別ファイルに定義しimportするなど、構成は自由に変更してください。
+import { Contact,Opportunity, Activity} from "./TypesAndUtils"
 
-interface Contact {
-    id: string;
-    lastName: string;
-    firstName: string;
-    belongingOrgId: string;
-    title: string;
-    contactLevel: number;
-    contactDescription: string;
-    keyPerson: boolean;
-  }
-  
-interface Activity {
-  id: string;         // PK (Amplify)
-  contactId: string;
-  activity: string;
-}
-
-interface Opportunity {
-  id: string;         // PK (Amplify)
-  contactId: string;
-  CustomerName: string;
-  ProductName: string;
-  OpportunityName: string;
-  Distributor: string;
-  Application: string;
-  Territory: string;
-  TargetPrice: number;
-  CustomerBudget: number;
-  CompetitorPrice: number;
-  CurrentStatus: string;
-}
 
 // ========== Propsの型定義 ==========
 interface ContactPageProps {
