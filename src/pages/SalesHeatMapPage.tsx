@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
   useToast,
-  useDisclosure,
   Input
 } from '@chakra-ui/react';
 import { RxReset } from "react-icons/rx";
@@ -11,7 +10,6 @@ import { RxReset } from "react-icons/rx";
 import type { Schema } from "../../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Company,CompanyMap,OrgMap,Organization, Contact,ContactMap,Opportunity, Activity} from "./TypesAndUtils"
-import { PositionedNode,DragOverMode,DragCandidate,DraggingState,SelectedEntity } from './TypesAndUtils';
 import { castCompanyAWSToInterface,castOrgAWSToInterface,castContactAWSToInterface,castOpportunityAWSToInterface,castActivityAWSToInterface } from './TypesAndUtils';
 import { syncLocalAndRemote,isActDifferent,isCompanyDifferent,isContactDifferent,isOppDifferent,isOrgDifferent } from './TypesAndUtils';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,9 +33,7 @@ const SalesHeatMapPage: React.FC = () => {
 
   const [opportunityData, setOpportunityData] = useState<Opportunity[]>([]);
   const [activityData, setActivityData] = useState<Activity[]>([]);
-  const [positionedRoot, setPositionedRoot] = useState<PositionedNode | null>(null);
-  const [positionedNewNodes, setPositionedNewNodes] = useState<PositionedNode[]>([]);
-  
+
   const [newCompanyName,setNewCompanyName] = useState<string>("")
   //
   // 1) データ読み込み

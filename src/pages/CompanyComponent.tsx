@@ -77,8 +77,8 @@ const CompanyComponent: React.FC<CompanyProps> = (props) => {
   const [dragOverMode, setDragOverMode] = useState<DragOverMode>(null);
 
     // Pan/Zoom
-  const [translateX, setTranslateX] = useState(50);
-  const [translateY, setTranslateY] = useState(50);
+  const translateX = 50;
+  const translateY = 50;
   const [scale, setScale] = useState(1);
   
   const lastPointerPosRef = useRef({ x: 0, y: 0 });
