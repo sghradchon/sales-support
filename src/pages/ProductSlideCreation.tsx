@@ -12,7 +12,7 @@ import {
 // import outputs from "../../amplify_outputs.json";
 
 // AmplifyのStorage機能を使用
-import { list,downloadData,uploadData } from 'aws-amplify/storage';
+import { downloadData,uploadData } from 'aws-amplify/storage';
 import { StorageImage } from '@aws-amplify/ui-react-storage';
 
 // Cognito認証情報の取得
@@ -25,7 +25,7 @@ import { generateClient } from "aws-amplify/data";
 
 import PptxGenJS from "pptxgenjs";
 
-import { Product,Part,castPartAWSToInterface,castProductAWSToInterface } from './TypesAndUtilsForSlide';
+import { Product,Part } from './TypesAndUtilsForSlide';
 
 // import { Product } from 'aws-cdk-lib/aws-servicecatalog';
 const client = generateClient<Schema>();
@@ -41,7 +41,7 @@ const client = generateClient<Schema>();
 const ProductSlideCreation: React.FC = () => {
   // DataStore から取得した全 Product, Part
   const [products, setProducts] = useState<Product[]>([]);
-  const [parts, setParts] = useState<Part[]>([]);
+  // const [parts, setParts] = useState<Part[]>([]);
 
   // Part を高速参照したいので、[partId -> Part] のマップを作る
   const [partMap, setPartMap] = useState<Record<string, Part>>({});
@@ -80,7 +80,6 @@ const ProductSlideCreation: React.FC = () => {
         }
 
         setProducts(allProducts);
-        setParts(allParts);
         setPartMap(pMap);
       } catch (error) {
         console.error("Unexpected error fetching DataStore:", error);
