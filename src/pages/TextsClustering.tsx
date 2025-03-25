@@ -17,19 +17,30 @@ import {
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import outputs from "../../amplify_outputs.json";
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { ClustersMap,ClustersResponse } from "./TypesAndUtilsForClustering";
 const awsRegion = outputs.auth.aws_region;
 const functionName = outputs.custom.texts_clustering_pipeFunctionName;
 
 
-
-type ClustersResponse = {
-    clusters: Record<string, string[]>; 
-    // 例: { "0": ["文1","文2"], "1": [...], "-1": [...], ... }
-};
-
-// 返ってくるクラスタ情報を扱いやすいように型定義
-type ClusterMap = Record<string, string[]>;
-
+// clustersをUnicodeエスケープから変換する関数
+function decodeClustersMap(clusters: ClustersMap): ClustersMap {
+    const decoded: ClustersMap = {};
+    for (const clusterId in clusters) {
+      const { texts, summary } = clusters[clusterId];
+  
+      // texts配列をUnicodeエスケープからデコード
+      const decodedTexts = texts.map(txt => JSON.parse(`"${txt}"`));
+  
+      // summaryも同様
+      const decodedSummary = JSON.parse(`"${summary}"`);
+  
+      decoded[clusterId] = {
+        texts: decodedTexts,
+        summary: decodedSummary
+      };
+    }
+    return decoded;
+  }
 const trigger_lambda = async (texts: string[]) => {
     // 認証情報・Regionなどの設定
     const { credentials } = await fetchAuthSession();
@@ -51,7 +62,6 @@ const trigger_lambda = async (texts: string[]) => {
     if (response.Payload) {
       // PayloadはUint8Arrayなので、TextDecoderで文字列化
       const rawPayload = new TextDecoder().decode(response.Payload);
-      console.log("rawPayload:", rawPayload);
   
       // Lambda側で多重にjson.dumpsしている場合は二重パースが必要
       // 1回目のパース
@@ -85,7 +95,7 @@ const trigger_lambda = async (texts: string[]) => {
     const [manualTexts, setManualTexts] = useState<string[]>([]);
   
     // クラスタリング結果
-    const [clusters, setClusters] = useState<ClusterMap>({});
+    const [clusters, setClusters] = useState<ClustersMap>({});
     const [loading, setLoading] = useState(false);
   
     // ------------------ (1) JSONファイルアップロード ------------------
@@ -171,20 +181,31 @@ const trigger_lambda = async (texts: string[]) => {
           return;
         }
   
-        const result:ClustersResponse = await trigger_lambda(merged);
-        console.log("Lambda result:", result);
-  
-        if (result?.clusters) {
-          setClusters(result.clusters);
+        const resultRaw = await trigger_lambda(merged);
+
+        const resultObj = (typeof resultRaw === 'string')
+            ? JSON.parse(resultRaw)
+            : resultRaw;
+
+        // 3. 型アサート
+        const typedResult = resultObj as ClustersResponse;
+
+        // 4. 必要なら decode
+        const decodedClusters = decodeClustersMap(typedResult.clusters);
+
+
+        if (decodedClusters) {
+            
+          setClusters(decodedClusters);
           toast({
             title: "クラスタリング成功",
-            description: `クラスタ数: ${Object.keys(result.clusters).length}`,
+            description: `クラスタ数: ${Object.keys(decodedClusters).length}`,
             status: "success",
           });
         } else {
           toast({
             title: "クラスタ情報がありません",
-            description: JSON.stringify(result),
+            description: "hoge",
             status: "info",
           });
         }
@@ -246,35 +267,148 @@ const trigger_lambda = async (texts: string[]) => {
           {loading ? <Spinner size="sm" /> : "クラスタリング開始"}
         </Button>
   
-        {/* 結果表示 */}
-        <Box mt={6}>
-          <Heading size="md" mb={2}>クラスタ結果</Heading>
-          {Object.keys(clusters).length === 0 ? (
-            <Text>まだ結果がありません。</Text>
-          ) : (
-            <Accordion allowMultiple>
-              {Object.entries(clusters).map(([clusterId, texts]) => (
-                <AccordionItem key={clusterId} border="1px solid #ccc" borderRadius="md" my={2}>
-                  <h2>
-                    <AccordionButton>
-                      <Box flex="1" textAlign="left">
-                        クラスタ {clusterId}
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                  </h2>
-                  <AccordionPanel pb={4}>
-                    {texts.map((txt, idx) => (
-                      <Box key={idx} mb={2} p={2} bg="gray.50" borderRadius="md">
-                        <Text fontSize="sm">{txt}</Text>
-                      </Box>
+        {/* <Box mt={6}>
+            <Heading size="md" mb={2}>クラスタ結果</Heading>
+                {!clusters ? ( // ←ここを追加 clustersがnullかundefinedなら表示
+                    <Text>まだ結果がありません。</Text>
+                ) : Object.keys(clusters).length === 0 ? (
+                    <Text>クラスタが空です。</Text>
+                ) : (
+                    <Accordion allowMultiple>
+                    {Object.entries(clusters).map(([clusterId, data]) => (
+                        <AccordionItem key={clusterId} border="1px solid #ccc" borderRadius="md" my={2}>
+                        <h2>
+                            <AccordionButton>
+                            <Box flex="1" textAlign="left">
+                                クラスタ {clusterId}
+                            </Box>
+                            <AccordionIcon />
+                            </AccordionButton>
+                        </h2>
+                        <AccordionPanel pb={4}>
+                            {data.texts.map((txt, idx) => (
+                            <Box key={idx} mb={2} p={2} bg="gray.50" borderRadius="md">
+                                <Text fontSize="sm">{txt}</Text>
+                            </Box>
+                            ))}
+                        </AccordionPanel>
+                        </AccordionItem>
                     ))}
-                  </AccordionPanel>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          )}
-        </Box>
+                    </Accordion>
+                )}
+        </Box> */}
+        <Box mt={6}>
+            <Heading size="md" mb={2}>クラスタ結果</Heading>
+            {
+                !clusters ? (
+                <Text>まだ結果がありません。</Text>
+                ) : Object.keys(clusters).length === 0 ? (
+                <Text>クラスタが空です。</Text>
+                ) : (
+                <Accordion allowMultiple>
+                    {Object.entries(clusters).map(([clusterId, data]) => {
+                    // clusterId === '-1' の場合と、それ以外で分岐
+                    if (clusterId === '-1') {
+                        return (
+                        <AccordionItem
+                            key={clusterId}
+                            border="1px solid #ccc"
+                            borderRadius="md"
+                            my={2}
+                        >
+                            <h2>
+                            <AccordionButton>
+                                <Box flex="1" textAlign="left">
+                                <Text fontWeight="bold" fontSize="lg" color="red.600">
+                                    クラスタ {clusterId} （飛び値）
+                                </Text>
+                                </Box>
+                                <AccordionIcon />
+                            </AccordionButton>
+                            </h2>
+                            <AccordionPanel pb={4}>
+                            <Box mb={2}>
+                                <Text fontSize="md" fontWeight="semibold" mb={2} color="red.600">
+                                このクラスタは飛び値として分類されました。要約はありません。
+                                </Text>
+                            </Box>
+                            <Box mt={2}>
+                                <Text fontSize="md" fontWeight="semibold" mb={1}>
+                                元テキスト
+                                </Text>
+                                {data.texts.map((txt, idx) => (
+                                <Box
+                                    key={idx}
+                                    mb={2}
+                                    p={2}
+                                    bg="white"
+                                    borderRadius="md"
+                                    border="1px solid #eee"
+                                >
+                                    <Text fontSize="sm">{txt}</Text>
+                                </Box>
+                                ))}
+                            </Box>
+                            </AccordionPanel>
+                        </AccordionItem>
+                        );
+                    } else {
+                        // 通常のクラスタ表示
+                        return (
+                        <AccordionItem
+                            key={clusterId}
+                            border="1px solid #ccc"
+                            borderRadius="md"
+                            my={2}
+                        >
+                            <h2>
+                            <AccordionButton>
+                                <Box flex="1" textAlign="left">
+                                <Text fontWeight="bold" fontSize="lg">
+                                    クラスタ {clusterId}
+                                </Text>
+                                </Box>
+                                <AccordionIcon />
+                            </AccordionButton>
+                            </h2>
+                            <AccordionPanel pb={4}>
+                            {/* 要約を上に表示 */}
+                            <Box mb={4}>
+                                <Text fontSize="md" fontWeight="semibold" mb={1}>
+                                要約
+                                </Text>
+                                <Box bg="gray.50" p={2} borderRadius="md">
+                                <Text fontSize="sm">{data.summary}</Text>
+                                </Box>
+                            </Box>
+                            
+                            {/* 元テキストを下に表示 */}
+                            <Box mt={2}>
+                                <Text fontSize="md" fontWeight="semibold" mb={1}>
+                                元テキスト
+                                </Text>
+                                {data.texts.map((txt, idx) => (
+                                <Box
+                                    key={idx}
+                                    mb={2}
+                                    p={2}
+                                    bg="white"
+                                    borderRadius="md"
+                                    border="1px solid #eee"
+                                >
+                                    <Text fontSize="sm">{txt}</Text>
+                                </Box>
+                                ))}
+                            </Box>
+                            </AccordionPanel>
+                        </AccordionItem>
+                        );
+                    }
+                    })}
+                </Accordion>
+                )
+            }
+            </Box>
       </Box>
     );
   };
