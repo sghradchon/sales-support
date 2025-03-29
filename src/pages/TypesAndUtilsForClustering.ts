@@ -11,3 +11,11 @@ export type ClusterData = {
   export type ClustersResponse = {
     clusters: ClustersMap;
   };
+
+  export interface TextFileData {
+    // JSONファイルの中身の構造を想定
+    isClusterd: boolean;
+    texts: string[];
+    [key: string]: any; // 他の情報があってもよい
+  }
+  

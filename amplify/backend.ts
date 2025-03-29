@@ -1,13 +1,14 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
-import { storage } from './storage/resource';
+import { storage,textsClusteringStorage } from './storage/resource';
 import { makeslide_pipe } from './function/makeslide_pipe/resource';
 import { texts_clustering_pipe } from './function/texts_clustering_pipe/resource';
 const backend = defineBackend({
   auth,
   data, 
   storage,
+  textsClusteringStorage,
   makeslide_pipe,
   texts_clustering_pipe
 });

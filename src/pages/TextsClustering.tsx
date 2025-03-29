@@ -20,7 +20,26 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { ClustersMap,ClustersResponse } from "./TypesAndUtilsForClustering";
 const awsRegion = outputs.auth.aws_region;
 const functionName = outputs.custom.texts_clustering_pipeFunctionName;
+// import { v4 as uuidv4 } from 'uuid';
 
+const textsClusteringBucket = outputs.storage.buckets[1].bucket_name
+const TEXTS_PREFIX = "texts/";
+
+///下記はaws amplify gen2 の storageへのアクセスの凡例
+import { downloadData ,list } from 'aws-amplify/storage';
+//const downloadResult = await downloadData({ path: s3path }).result;
+//const res = await uploadData({
+      //   path: s3uri,
+      //   data: imageBlob,
+      // }).result;
+
+// リスト取得後のアイテム構造
+interface S3Item {
+  path: string;
+  eTag?: string;
+  lastModified?: Date;
+  size?: number;
+}
 
 // clustersをUnicodeエスケープから変換する関数
 function decodeClustersMap(clusters: ClustersMap): ClustersMap {
@@ -41,6 +60,9 @@ function decodeClustersMap(clusters: ClustersMap): ClustersMap {
     }
     return decoded;
   }
+
+
+
 const trigger_lambda = async (texts: string[]) => {
     // 認証情報・Regionなどの設定
     const { credentials } = await fetchAuthSession();
@@ -88,7 +110,8 @@ const trigger_lambda = async (texts: string[]) => {
 
   const TextsClustering: React.FC = () => {
     const toast = useToast();
-  
+    // S3ファイル一覧
+    const [s3Items, setS3Items] = useState<S3Item[]>([]);
     // ファイルから読み込んだテキスト配列
     const [fileTexts, setFileTexts] = useState<string[]>([]);
     // テキストエリアから入力されたテキスト配列
@@ -169,6 +192,77 @@ const trigger_lambda = async (texts: string[]) => {
         status: "success",
       });
     };
+
+    //------------(2.5) S3からjson file 選択---------------
+      // ----------- (2.5) S3一覧を取得して表示 -----------
+  const listS3Textsfiles = async () => {
+    try {
+      setLoading(true);
+      const result = await list({
+        path: TEXTS_PREFIX,
+        options: { bucket: textsClusteringBucket }
+      });
+      const items = (result.items || []) as S3Item[];
+      setS3Items(items);
+      toast({
+        title: "S3ファイル一覧取得成功",
+        description: `texts/下に ${items.length}件あり`,
+        status: "success",
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: "ファイル一覧取得失敗",
+        description: err.message,
+        status: "error",
+        duration: 5000
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+    // ----------- (2.6) S3ファイルを選択してダウンロード -----------
+    const handleS3FileSelect = async (filePath: string) => {
+      try {
+        setLoading(true);
+        setFileTexts([]);
+        setManualTexts([]);
+        setClusters({});
+  
+        const downloadResult = await downloadData({
+          path: filePath,
+          options: { bucket: textsClusteringBucket }
+        }).result;
+        const rawText = await downloadResult.body.json();
+        const obj = JSON.parse(rawText);
+  
+        let arr: string[] = [];
+        if (Array.isArray(obj)) {
+          arr = obj;
+        } else if (Array.isArray(obj.texts)) {
+          arr = obj.texts;
+        }
+        setFileTexts(arr);
+        toast({
+          title: "S3ファイルを読み込みました",
+          description: filePath,
+          status: "success"
+        });
+      } catch (err: any) {
+        console.error(err);
+        toast({
+          title: "ダウンロード失敗",
+          description: err.message,
+          status: "error",
+          duration: 4000
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+  
   
     // ------------------ (3) クラスタリング リクエスト ------------------
     const handleClusterRequest = async () => {
@@ -257,6 +351,24 @@ const trigger_lambda = async (texts: string[]) => {
             手動入力で確定した行数: {manualTexts.length}
           </Text>
         </Box>
+              {/* 2.5 S3 texts/ 下のファイル一覧を取得 & 選択 */}
+      <Box mb={6} border="1px solid #ddd" p={3} borderRadius="md">
+        <Heading size="md" mb={2}>S3の texts/ ファイル一覧</Heading>
+        <Button colorScheme="blue" size="sm" onClick={listS3Textsfiles} isDisabled={loading}>
+          {loading ? <Spinner size="sm" /> : "一覧を取得"}
+        </Button>
+        {s3Items.length > 0 && (
+          <Box mt={3}>
+            {s3Items.map(item => (
+              <Box key={item.path} mb={1}>
+                <Button variant="link" onClick={() => handleS3FileSelect(item.path)}>
+                  {item.path} ({item.size} bytes)
+                </Button>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
   
         {/* (3) クラスタリング実行 */}
         <Button
@@ -267,36 +379,6 @@ const trigger_lambda = async (texts: string[]) => {
           {loading ? <Spinner size="sm" /> : "クラスタリング開始"}
         </Button>
   
-        {/* <Box mt={6}>
-            <Heading size="md" mb={2}>クラスタ結果</Heading>
-                {!clusters ? ( // ←ここを追加 clustersがnullかundefinedなら表示
-                    <Text>まだ結果がありません。</Text>
-                ) : Object.keys(clusters).length === 0 ? (
-                    <Text>クラスタが空です。</Text>
-                ) : (
-                    <Accordion allowMultiple>
-                    {Object.entries(clusters).map(([clusterId, data]) => (
-                        <AccordionItem key={clusterId} border="1px solid #ccc" borderRadius="md" my={2}>
-                        <h2>
-                            <AccordionButton>
-                            <Box flex="1" textAlign="left">
-                                クラスタ {clusterId}
-                            </Box>
-                            <AccordionIcon />
-                            </AccordionButton>
-                        </h2>
-                        <AccordionPanel pb={4}>
-                            {data.texts.map((txt, idx) => (
-                            <Box key={idx} mb={2} p={2} bg="gray.50" borderRadius="md">
-                                <Text fontSize="sm">{txt}</Text>
-                            </Box>
-                            ))}
-                        </AccordionPanel>
-                        </AccordionItem>
-                    ))}
-                    </Accordion>
-                )}
-        </Box> */}
         <Box mt={6}>
             <Heading size="md" mb={2}>クラスタ結果</Heading>
             {
