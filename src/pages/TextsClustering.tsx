@@ -308,6 +308,7 @@ const trigger_lambda = async (texts: string[]) => {
         description: path,
         status: "success",
       });
+      console.log( "アップロード成功",result)
     } catch (err: any) {
       console.error(err);
       toast({
