@@ -20,13 +20,13 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { ClustersMap,ClustersResponse } from "./TypesAndUtilsForClustering";
 const awsRegion = outputs.auth.aws_region;
 const functionName = outputs.custom.texts_clustering_pipeFunctionName;
-// import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 const textsClusteringBucket = outputs.storage.buckets[1].bucket_name
 const TEXTS_PREFIX = "texts/";
 
 ///下記はaws amplify gen2 の storageへのアクセスの凡例
-import { downloadData ,list } from 'aws-amplify/storage';
+import { downloadData ,uploadData,list } from 'aws-amplify/storage';
 //const downloadResult = await downloadData({ path: s3path }).result;
 //const res = await uploadData({
       //   path: s3uri,
@@ -120,7 +120,8 @@ const trigger_lambda = async (texts: string[]) => {
     // クラスタリング結果
     const [clusters, setClusters] = useState<ClustersMap>({});
     const [loading, setLoading] = useState(false);
-  
+    console.log("textsClusteringBucket",textsClusteringBucket)
+
     // ------------------ (1) JSONファイルアップロード ------------------
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -200,7 +201,10 @@ const trigger_lambda = async (texts: string[]) => {
       setLoading(true);
       const result = await list({
         path: TEXTS_PREFIX,
-        options: { bucket: textsClusteringBucket }
+        options: { bucket: {
+             bucketName: textsClusteringBucket,
+             region: awsRegion
+           } }
       });
       const items = (result.items || []) as S3Item[];
       setS3Items(items);
@@ -233,9 +237,12 @@ const trigger_lambda = async (texts: string[]) => {
   
         const downloadResult = await downloadData({
           path: filePath,
-          options: { bucket: textsClusteringBucket }
+          options: { bucket: {
+            bucketName: textsClusteringBucket,
+            region: awsRegion
+          } }
         }).result;
-        const rawText = await downloadResult.body.json();
+        const rawText = await downloadResult.body.text();
         const obj = JSON.parse(rawText);
   
         let arr: string[] = [];
@@ -262,6 +269,56 @@ const trigger_lambda = async (texts: string[]) => {
         setLoading(false);
       }
     };
+
+      // --------------------- (4) fileTexts を S3にアップロード ---------------------
+  const handleS3Upload = async () => {
+    if (fileTexts.length === 0) {
+      toast({
+        title: "アップロードするテキストがありません",
+        status: "warning"
+      });
+      return;
+    }
+    try {
+      setLoading(true);
+
+      // 例: ランダムID or uuidでファイル名を決定
+      const fileId = uuidv4();
+      const path = `${TEXTS_PREFIX}${fileId}.json`;
+
+      const bodyObj = {
+        texts: fileTexts,
+        createdAt: new Date().toISOString(),
+        isClusterd: false
+      };
+      const blob = new Blob([JSON.stringify(bodyObj)], { type: "application/json" });
+
+      const result = await uploadData({
+        path,
+        data: blob,
+        options: {
+          bucket: {
+            bucketName: textsClusteringBucket,
+            region: awsRegion
+          }
+        }
+      });
+      toast({
+        title: "アップロード成功",
+        description: path,
+        status: "success",
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: "アップロード失敗",
+        description: err.message,
+        status: "error"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   
     // ------------------ (3) クラスタリング リクエスト ------------------
@@ -351,6 +408,18 @@ const trigger_lambda = async (texts: string[]) => {
             手動入力で確定した行数: {manualTexts.length}
           </Text>
         </Box>
+
+              {/* まとめて texts をS3にアップロード */}
+      <Box mb={4}>
+        <Button
+          colorScheme="blue"
+          onClick={handleS3Upload}
+          isDisabled={loading}
+        >
+          {loading ? <Spinner size="sm" /> : "S3へアップロード (texts/xxx.json)"}
+        </Button>
+      </Box>
+
               {/* 2.5 S3 texts/ 下のファイル一覧を取得 & 選択 */}
       <Box mb={6} border="1px solid #ddd" p={3} borderRadius="md">
         <Heading size="md" mb={2}>S3の texts/ ファイル一覧</Heading>

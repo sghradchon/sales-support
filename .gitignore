@@ -26,6 +26,7 @@ dist-ssr
 *.sln
 *.sw?
 src_copy/
+src_copy_old/
 # amplify
 .amplify
 amplify_outputs*

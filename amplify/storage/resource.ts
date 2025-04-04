@@ -30,7 +30,15 @@ export const textsClusteringStorage = defineStorage({
       allow.guest.to(['read', 'write']),
     ],
     'secret/*':[]
-  })
+  }),
+  // triggers: {
+  //   onUpload: defineFunction({
+  //     entry: './on-upload-handler.ts'
+  //   }),
+  //   onDelete: defineFunction({
+  //     entry: './on-delete-handler.ts'
+  //   })
+  // }
 });
 
 
