@@ -1,0 +1,20 @@
+[
+    {
+      "id": "COM-1",
+      "companyName": "XXX自動車",
+      "upperLevelCompanyId": "",
+      "memo": ""
+    },
+    {
+      "id": "COM-2",
+      "companyName": "ZZZ金型",
+      "upperLevelCompanyId": "",
+      "memo": ""
+    },
+    {
+      "id": "COM-3",
+      "companyName": "YYY機械部品",
+      "upperLevelCompanyId": "",
+      "memo": ""
+    }
+  ]

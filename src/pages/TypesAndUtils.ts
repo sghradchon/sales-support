@@ -21,29 +21,36 @@ export interface Company {
     memo: string;
   }
   
-  export interface OrgMap {
+  export interface OrgByCompanyMap {
     [companyId: string]: Organization[];
   }
 
-  export interface ContactMap {
+  export interface ContactByCompanyMap {
     [companiId:string]:Contact[]
   }
   
-  export   interface Contact {
+  export interface Contact {
     id: string;
     lastName: string;
     firstName: string;
     belongingOrgId: string;
-    belongingCompanyId:string;
     title: string;
     contactLevel: number;
     contactDescription: string;
     keyPerson: boolean;
+    siblingOrder: number;
+    hobby: string;
+    familyMember: string;
+    previousCareer: string;
+    speciality: string;
+    alcoholPreference: string;
+    foodPreference: string;
   }
-  
-  
+
+
+
   export interface Opportunity {
-    id: string; //PK
+    id: string; // PK
     contactId: string;
     CustomerName: string;
     ProductName: string;
@@ -54,15 +61,63 @@ export interface Company {
     TargetPrice: number;
     CustomerBudget: number;
     CompetitorPrice: number;
+    ScheduleSpec: string;
+    ScheduleQuote: string;
+    ScheduleOrder: string;
+    ScheduleDelivery: string;
+    CustomerProductImage: string;
+    OpportunityStage: string;
     CurrentStatus: string;
-    // 他の必要なプロパティがあれば追加
   }
   
   export interface Activity {
     id: string; //PK
+    activityDate:string;
     contactId: string;
-    activity: string;
+    content: string;
+    todoDate:string;
+    todo:string
   }
+
+  // ContactByCompanyを間接的に作る関数
+  export const createContactByCompany = (
+    companies: Company[],
+    organizations: Organization[],
+    contacts: Contact[]
+  ): ContactByCompanyMap => {
+    
+    // OrganizationからcompanyIdをマッピングする
+    const orgToCompanyMap: Record<string, string> = organizations.reduce((acc, org) => {
+      acc[org.id] = org.companyId;
+      return acc;
+    }, {} as Record<string, string>);
+
+    // 会社ごとのContactをまとめる
+    const contactByCompany: ContactByCompanyMap = companies.reduce((acc, company) => {
+      acc[company.id] = contacts.filter(contact => {
+        const orgId = contact.belongingOrgId;
+        const compId = orgToCompanyMap[orgId];
+        return compId === company.id;
+      });
+      return acc;
+    }, {} as ContactByCompanyMap);
+
+    return contactByCompany;
+  };
+
+
+  export const getContactsByTheCompany = (
+    contacts: Contact[],
+    organizations: Organization[],
+    companyId: string
+  ): Contact[] => {
+    ///contactId指定でContact[]を取り出す
+    const orgIds = organizations
+      .filter(org => org.companyId === companyId)
+      .map(org => org.id);
+  
+    return contacts.filter(contact => orgIds.includes(contact.belongingOrgId));
+  };
 
   
   export const castCompanyAWSToInterface = (data: any[]) => {
@@ -87,52 +142,61 @@ export interface Company {
         };
     });
   };
-  export const castContactAWSToInterface = (data: any[]) => {
-    return data.map((item) => {
-        return {
-          id: item.id ?? '',
-          lastName: item.lastName ?? '',
-          firstName: item.firstName ?? '',
-          belongingOrgId: item.belongingOrgId ?? '',
-          belongingCompanyId: item.belongingCompanyId ?? '',
-          title: item.title ?? '',
-          contactLevel: item.contactLevel ?? 0,
-          contactDescription: item.contactDescription ?? '',
-          keyPerson: item.keyPerson ?? false,
-        };
-      }
-    );
+
+  export const castContactAWSToInterface = (data: any[]): Contact[] => {
+    return data.map((item) => ({
+      id: item.id ?? '',
+      lastName: item.lastName ?? '',
+      firstName: item.firstName ?? '',
+      belongingOrgId: item.organizationId ?? '',
+      title: item.title ?? '',
+      contactLevel: item.contactLevel ?? 0,
+      contactDescription: item.contactDescription ?? '',
+      keyPerson: item.keyPerson ?? false,
+      siblingOrder: Number(item.siblingOrder) ?? 0,
+      hobby: item.hobby ?? '',
+      familyMember: item.familyMember ?? '',
+      previousCareer: item.previousCareer ?? '',
+      speciality: item.speciality ?? '',
+      alcoholPreference: item.alcoholPreference ?? '',
+      foodPreference: item.foodPreference ?? ''
+    }));
   };
-  
-  
+
   export const castOpportunityAWSToInterface = (data: any[]): Opportunity[] => {
-    return data.map((item) => {
-      return {
-        id:item.id??'',
-        contactId: item.contactId ?? '',
-        CustomerName: item.CustomerName ?? '',
-        ProductName: item.ProductName ?? '',
-        OpportunityName: item.OpportunityName ?? '',
-        Distributor: item.Distributor ?? '',
-        Application: item.Application ?? '',
-        Territory: item.Territory ?? '',
-        TargetPrice: item.TargetPrice ?? 0,
-        CustomerBudget: item.CustomerBudget ?? 0,
-        CompetitorPrice: item.CompetitorPrice ?? 0,
-        CurrentStatus: item.CurrentStatus ?? '',
-      };
-    });
+    return data.map((item) => ({
+      id: item.Id ?? '',
+      contactId: item.contactId ?? '',
+      CustomerName: item.CustomerName ?? '',
+      ProductName: item.ProductName ?? '',
+      OpportunityName: item.OpportunityName ?? '',
+      Distributor: item.Distributor ?? '',
+      Application: item.Application ?? '',
+      Territory: item.Territory ?? '',
+      TargetPrice: item.TargetPrice ?? 0,
+      CustomerBudget: item.CustomerBudget ?? 0,
+      CompetitorPrice: item.CompetitorPrice ?? 0,
+      ScheduleSpec: item.ScheduleSpec ?? '',
+      ScheduleQuote: item.ScheduleQuote ?? '',
+      ScheduleOrder: item.ScheduleOrder ?? '',
+      ScheduleDelivery: item.ScheduleDelivery ?? '',
+      CustomerProductImage: item.CustomerProductImage ?? '',
+      OpportunityStage: item.OpportunityStage ?? '',
+      CurrentStatus: item.CurrentStatus ?? '',
+    }));
+  };
+
+  export const castActivityAWSToInterface = (data: any[]): Activity[] => {
+    return data.map((item) => ({
+      id: item.id ?? '',
+      contactId: item.contactId ?? '',
+      activityDate:item.activityDate ?? '',
+      content: item.content ?? '',
+      todoDate: item.todoDate ?? '',
+      todo: item.todo ?? '',
+    }));
   };
   
-  export const castActivityAWSToInterface = (data: any[]): Activity[] => {
-    return data.map((item) => {
-      return {
-        id:item.id??'',
-        contactId: item.contactId ?? '',
-        activity: item.activity ?? '',
-      };
-    });
-  };
 
   export async function syncLocalAndRemote<T>(args: SyncLocalRemoteArgs<T>) {
     const {
@@ -223,24 +287,30 @@ export interface Company {
   export function isOrgDifferent(localObj: Organization, remoteObj: any) {
       if (localObj.organizationName !== remoteObj.organizationName) return true;
       if (localObj.upperLevelOrgId !== remoteObj.upperLevelOrgId) return true;
-      if (localObj.siblingLevelOrgOrder !== remoteObj.siblingLevelOrgOrder) return true;
+      if (localObj.siblingLevelOrgOrder !== Number(remoteObj.siblingLevelOrgOrder)) return true;
       if (localObj.companyId !== remoteObj.companyId) return true;
       if (localObj.memo !== remoteObj.memo) return true;
       return false;
     }
-  
-    export function isContactDifferent(localC: Contact, remoteC: any): boolean {
-      if (localC.lastName !== remoteC.lastName) return true;
-      if (localC.firstName !== remoteC.firstName) return true;
-      if (localC.belongingOrgId !== remoteC.belongingOrgId) return true;
-      if (localC.belongingCompanyId !== remoteC.belongingCompanyId) return true;
-      if (localC.title !== remoteC.title) return true;
-      if (localC.contactLevel !== remoteC.contactLevel) return true;
-      if (localC.contactDescription !== remoteC.contactDescription) return true;
-      return false;
-    }
-  
-  export  function isOppDifferent(localO: Opportunity, remoteO: any): boolean {
+  export function isContactDifferent(localC: Contact, remoteC: any): boolean {
+    if (localC.lastName !== remoteC.lastName) return true;
+    if (localC.firstName !== remoteC.firstName) return true;
+    if (localC.belongingOrgId !== remoteC.belongingOrgId) return true;
+    if (localC.title !== remoteC.title) return true;
+    if (localC.contactLevel !== remoteC.contactLevel) return true;
+    if (localC.contactDescription !== remoteC.contactDescription) return true;
+    if (localC.keyPerson !== remoteC.keyPerson) return true;
+    if (localC.siblingOrder !== Number(remoteC.siblingOrder)) return true;
+    if (localC.hobby !== remoteC.hobby) return true;
+    if (localC.familyMember !== remoteC.familyMember) return true;
+    if (localC.previousCareer !== remoteC.previousCareer) return true;
+    if (localC.speciality !== remoteC.speciality) return true;
+    if (localC.alcoholPreference !== remoteC.alcoholPreference) return true;
+    if (localC.foodPreference !== remoteC.foodPreference) return true;
+    return false;
+  }
+      
+    export function isOppDifferent(localO: Opportunity, remoteO: any): boolean {
       if (localO.contactId !== remoteO.contactId) return true;
       if (localO.CustomerName !== remoteO.CustomerName) return true;
       if (localO.ProductName !== remoteO.ProductName) return true;
@@ -251,16 +321,24 @@ export interface Company {
       if (localO.TargetPrice !== remoteO.TargetPrice) return true;
       if (localO.CustomerBudget !== remoteO.CustomerBudget) return true;
       if (localO.CompetitorPrice !== remoteO.CompetitorPrice) return true;
+      if (localO.ScheduleSpec !== remoteO.ScheduleSpec) return true; // 追加
+      if (localO.ScheduleQuote !== remoteO.ScheduleQuote) return true; // 追加
+      if (localO.ScheduleOrder !== remoteO.ScheduleOrder) return true; // 追加
+      if (localO.ScheduleDelivery !== remoteO.ScheduleDelivery) return true; // 追加
+      if (localO.CustomerProductImage !== remoteO.CustomerProductImage) return true; // 追加
+      if (localO.OpportunityStage !== remoteO.OpportunityStage) return true; // 追加
       if (localO.CurrentStatus !== remoteO.CurrentStatus) return true;
       return false;
     }
     
-  export   function isActDifferent(localA: Activity, remoteA: any): boolean {
+    export function isActDifferent(localA: Activity, remoteA: any): boolean {
       if (localA.contactId !== remoteA.contactId) return true;
-      if (localA.activity !== remoteA.activity) return true;
+      if (localA.activityDate !== remoteA.activityDate) return true; // 修正: activity→content
+      if (localA.content !== remoteA.content) return true; // 修正: activity→content
+      if (localA.todoDate !== remoteA.todoDate) return true; // 追加
+      if (localA.todo !== remoteA.todo) return true; // 追加
       return false;
     }
-  
 
 
  export interface OrgTreeNode {
@@ -438,6 +516,98 @@ export function findOrgNodeAt(
   }
   return null;
 }
+
+/**
+   * Contact位置判定
+   *   - 組織ツリー全体をスキャンして、Contact矩形にマウスがあるかどうか
+   *   - 当たれば "contactId, orgId, orientation, rectX1, rectX2, rectY1, rectY2"
+   */
+export function findContactAt(
+  allTrees: PositionedNode[],
+  x: number,
+  y: number
+): null | {
+  contactId: string;
+  orgId: string;
+  orientation: 'horizontal' | 'vertical';
+  rectX1: number;
+  rectX2: number;
+  rectY1: number;
+  rectY2: number;
+} {
+  for (const tree of allTrees) {
+    const hit = findContactAtNode(tree, x, y);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+// 再帰探索
+function findContactAtNode(
+  node: PositionedNode,
+  x: number,
+  y: number
+): ReturnType<typeof findContactAt> {
+  // 自分の contacts でヒットを調べる
+  if (node.children.length === 0) {
+    // 横並び
+    const contactWidth = 80;
+    const contactHeight = CONTACT_BOX_HEIGHT;
+    const gap = 5;
+    let cx = node.x + 10;
+    const cy = node.y + 40;
+
+    const sorted = [...node.contacts].sort((a, b) => (a.siblingOrder ?? 9999) - (b.siblingOrder ?? 9999));
+    for (const c of sorted) {
+      const rectX1 = cx;
+      const rectY1 = cy;
+      const rectX2 = rectX1 + contactWidth;
+      const rectY2 = rectY1 + contactHeight;
+      if (x >= rectX1 && x <= rectX2 && y >= rectY1 && y <= rectY2) {
+        return {
+          contactId: c.id,
+          orgId: c.id,
+          orientation: 'horizontal',
+          rectX1, rectX2, rectY1, rectY2
+        };
+      }
+      cx += contactWidth + gap;
+    }
+  } else {
+    // 縦並び
+    const rectWidth = node.width - 20;
+    const contactHeight = CONTACT_BOX_HEIGHT;
+    const gap = CONTACT_BOX_GAP;
+    let cy = node.y + BOX_TOP_PADDING;
+
+    const sorted = [...node.contacts].sort((a, b) => (a.siblingOrder ?? 9999) - (b.siblingOrder ?? 9999));
+    for (const c of sorted) {
+      const rectX1 = node.x + 10;
+      const rectY1 = cy;
+      const rectX2 = rectX1 + rectWidth;
+      const rectY2 = rectY1 + contactHeight;
+
+      if (x >= rectX1 && x <= rectX2 && y >= rectY1 && y <= rectY2) {
+        return {
+          contactId: c.id,
+          orgId: c.id,
+          orientation: 'vertical',
+          rectX1, rectX2, rectY1, rectY2
+        };
+      }
+      cy += contactHeight + gap;
+    }
+  }
+
+  // 子にも問い合わせ
+  for (const child of node.children) {
+    const found = findContactAtNode(child, x, y);
+    if (found) return found;
+  }
+
+  return null;
+}
+
 
 export function findPositionedNode(node: PositionedNode, orgId: string): PositionedNode | null {
   if (node.org.id === orgId) return node;

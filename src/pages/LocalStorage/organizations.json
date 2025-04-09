@@ -1,0 +1,66 @@
+[
+    {
+        "id": "ORG-001",
+        "organizationName": "XXX自動車",
+        "upperLevelOrgId": "",
+        "memo": "本社",
+        "companyId":"COM-1"
+    },
+    {
+        "id": "ORG-002",
+        "organizationName": "生産技術部",
+        "upperLevelOrgId": "ORG-001",
+        "memo": "設備導入",
+        "companyId":"COM-1"
+        
+    },
+    {
+        "id": "ORG-003",
+        "organizationName": "パワートレイン課",
+        "upperLevelOrgId": "ORG-002",
+        "memo": "エンジン・トランスミッションの制作",
+        "companyId":"COM-1"
+    },
+    {
+        "id": "ORG-004",
+        "organizationName": "ボデー課",
+        "upperLevelOrgId": "ORG-002",
+        "memo": "ボデー",
+        "companyId":"COM-1"
+    },
+    {
+        "id": "ORG-005",
+        "organizationName": "購買部",
+        "upperLevelOrgId": "ORG-001",
+        "memo": "購買",
+        "companyId":"COM-1"
+    },
+    {
+        "id": "ORG-006",
+        "organizationName": "購買2課",
+        "upperLevelOrgId": "ORG-005",
+        "memo": "購買2課",
+        "companyId":"COM-1"
+    },
+    {
+        "id": "ORG-007",
+        "organizationName": "YYY機械部品",
+        "upperLevelOrgId": "",
+        "memo": "機械部品",
+         "companyId":"COM-2"
+    },
+    {
+        "id": "ORG-008",
+        "organizationName": "設備担当役員",
+        "upperLevelOrgId": "ORG-007",
+        "memo": "設備担当役員",
+        "companyId":"COM-2"
+    },
+    {
+        "id": "ORG-009",
+        "organizationName": "ZZZ金型",
+        "upperLevelOrgId": "",
+        "memo": "金型",
+        "companyId":"COM-3"
+    }
+]
