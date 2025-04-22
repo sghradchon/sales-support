@@ -8,13 +8,13 @@
     {
       "id": "COM-2",
       "companyName": "ZZZ金型",
-      "upperLevelCompanyId": "",
+      "upperLevelCompanyId": "COM-1",
       "memo": ""
     },
     {
       "id": "COM-3",
       "companyName": "YYY機械部品",
-      "upperLevelCompanyId": "",
+      "upperLevelCompanyId": "COM-1",
       "memo": ""
     }
   ]

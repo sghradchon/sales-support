@@ -41,8 +41,8 @@ const BOX_TOP_PADDING = 40;
 const CONTACT_BOX_HEIGHT = 20;
 const CONTACT_BOX_GAP = 5;
 
-const svgWidth = 1200;
-const svgHeight = 300;
+const svgWidth = 800;
+const svgHeight = 350;
 
 interface CompanyProps {
   company: Company;
